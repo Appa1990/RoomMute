@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType><TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF><UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>disable</ImplicitUsings><AssemblyName>RoomMute</AssemblyName>
+    <ApplicationIcon>Resources\Icons\RoomMute.ico</ApplicationIcon><ApplicationManifest>app.manifest</ApplicationManifest><Version>1.4.1</Version>
+  </PropertyGroup>
+  <ItemGroup><ProjectReference Include="../RoomMute.Core/RoomMute.Core.csproj"/><PackageReference Include="NAudio.Wasapi" Version="2.3.0"/></ItemGroup>
+</Project>
+
+
+
+
+
+

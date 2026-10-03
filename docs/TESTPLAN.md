@@ -1,0 +1,56 @@
+# Hardware-Abnahme 1.4
+
+Beide PCs auf 1.4 aktualisieren; vorher alte Versionen über den Tray beenden.
+
+1. Den ursprünglichen Windows-Eingangspegel notieren (z. B. 80 %).
+2. Ducking-Restpegel 20 % speichern. Partner spricht: Eingangsregler sinkt ungefähr auf 16 %; Windows-Mute bleibt aus.
+3. Partner hört auf: ursprüngliche 80 % nach Release wiederhergestellt.
+4. Während Ducking Stop, Automation pausieren, Exit und Partner-Netzausfall testen: vorheriger Pegel wird wiederhergestellt, bei Netzausfall nach ca. 3 Sekunden.
+5. Während Ducking manuell muten: Mute bleibt an, vorheriger Eingangspegel wird wiederhergestellt.
+6. Während Ducking den Windows-Eingangspegel manuell ändern: neuer Wert bleibt erhalten und Automation pausiert.
+7. Restpegel 1 %, 50 % und 100 % testen. 100 % verändert den Pegel nicht. Bei kleinen Werten auf Treiberrundung und Hörbarkeit achten.
+8. Abwechselnd und gleichzeitig sprechen, Prioritäten 10/20 verwenden; in Discord/Teams tatsächliche Doppelübertragung prüfen.
+9. Mikrofon abziehen und wieder anschließen: Fehler sichtbar; automatische Wiederholungen starten das gespeicherte Gerät nach dem Wiederanschließen erneut.
+10. Fenster normal, maximiert und verkleinert ansehen: auch außerhalb der inneren Karten dunkler Hintergrund.
+11. Tray, Autostart und gespeicherte Einstellungen prüfen.
+
+Diese Hardware-Abnahme wurde nicht automatisch durchgeführt.
+
+
+## Dashboard und Sprache
+
+- Deutsch und Englisch oben rechts wechseln, Anwendung neu öffnen: Sprachwahl bleibt gespeichert.
+- Während laufender Überwachung wechseln: Verbindung und Automation laufen weiter.
+- Beide Schwellen verändern: grüne/blaue Markierungen folgen sofort; Änderungen erst nach Übernehmen aktiv.
+- Attack-/Release-Fragezeichen mit der Maus berühren: verständliche Erklärung in der gewählten Sprache.
+- Eigene IPv4 kopieren und auf dem Partner-PC eintragen. Bei mehreren Adaptern die LAN-Adresse auswählen.
+- Dashboard in 1240 × 800 und 1040 × 740 prüfen: alle Regler, Felder und Übernehmen ohne Scrollen erreichbar.
+- Noch nicht übernommene Felder beim Sprachwechsel beibehalten.
+
+## Shortcut und automatischer Start
+
+- Während der Partner spricht, F8 halten: eigener Eingangspegel wird wiederhergestellt; Loslassen aktiviert die normale Koordination erneut. In Discord/Teams bei aktivem Fenster sowie bei RoomMute im Tray prüfen.
+- Manuelles Mute vor und während des Haltens: Taste darf es nicht aufheben. Extern veränderte Eingangspegel dürfen nicht überschrieben werden.
+- Shortcut ändern und übernehmen; eine belegte Taste muss als nicht verfügbar erscheinen. Im Aufnahmedialog Shortcut deaktivieren wählen. Taste vor dem Beenden loslassen und danach erneut verwenden: keine hängen gebliebene Freigabe.
+- Auf beiden PCs Mikrofon, Partner-IP und Mit Windows starten speichern; Automation aktiv lassen. Abmelden und anmelden: Überwachung und Verbindung starten ohne Klick auf Starten. Optional Minimiert starten verwenden.
+- Partner erst später einschalten und später erneut starten: Verbindung stellt sich selbstständig her. Kein dauerhaftes Ducking während des Ausfalls.
+- Beim Anmelden Mikrofon oder Netzwerk noch nicht verfügbar: Status zeigt den Wartezustand, danach wird automatisch erneut gestartet. Das gespeicherte Mikrofon muss erhalten bleiben.
+- Während eines automatischen Startversuchs Stop drücken: keine weiteren Versuche bis zum nächsten bewussten Start oder Programmneustart.
+
+Automatisiert geprüft: 54 Logik-/Netzwerktests, nativer Hotkey-Lebenszyklus ohne reale Tastatureingabe und Dashboard-Renderings DE/EN bei beiden Fenstergrößen. Eine echte Windows-Anmeldung und der Zwei-PC-Test mit physischen Mikrofonen bleiben Teil dieser Hardware-Abnahme.
+
+## Freie Shortcut-Aufnahme
+
+- Aufnehmen klicken, Strg halten und 5 drücken: Anzeige Strg + 5; erst nach Übernehmen global aktiv.
+- Nur Strg/Alt/Umschalt drücken: Aufnahme wartet weiter. Esc oder Abbrechen erhält den bisherigen Shortcut. Wechsel zu einer anderen App während der Aufnahme bricht ab.
+- Einzelne Taste, Alt + A, mehrere Modifikatoren und Nummernblock testen. Sprache wechseln: Strg/Ctrl-Anzeige aktualisiert sich.
+- Während der Freigabe zuerst 5 oder zuerst Strg loslassen: in beiden Fällen endet die Freigabe. Manuelles Mute bleibt erhalten.
+- Eine belegte Kombination wählen: nicht verfügbar anzeigen; andere aufnehmen. Deaktivieren und übernehmen entfernt die globale Belegung.
+
+## Mouse3
+
+- Aufnehmen anklicken und Mausrad drücken: Mouse3 erscheint. Linke/rechte Klicks müssen Abbrechen und Deaktivieren weiterhin bedienen.
+- Übernehmen und bei aktivem Discord/Spiel sowie im Tray halten: eigene Absenkung endet beim Drücken und normale Koordination gilt nach Loslassen wieder.
+- Strg + Mouse3 aufnehmen; zuerst Strg oder zuerst die mittlere Taste loslassen: Freigabe endet jeweils.
+- Maus bewegen oder Mausrad drehen: kein Override. Manuelles Mute bleibt erhalten.
+- Von Mouse3 auf Tastatur, anschließend deaktivieren: Registrierung wechselt ohne zurückbleibende Freigabe.

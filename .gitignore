@@ -1,0 +1,14 @@
+**/bin/
+**/obj/
+.vs/
+artifacts/
+*.user
+
+
+.codex/
+.agents/
+.env
+.env.*
+*.log
+config.json
+

@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+<PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net8.0</TargetFramework></PropertyGroup>
+<ItemGroup><ProjectReference Include="../RoomMute.Core/RoomMute.Core.csproj"/><Compile Include="../RoomMute/Networking/UdpTransport.cs" Link="Networking/UdpTransport.cs"/><Compile Include="../RoomMute/Services/LocalNetworkService.cs" Link="Services/LocalNetworkService.cs"/><Compile Include="../RoomMute/Services/NetworkService.cs" Link="Services/NetworkService.cs"/></ItemGroup>
+</Project>
+
+
