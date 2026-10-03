@@ -1,7 +1,8 @@
 namespace RoomMute.Core;
 
 /// <summary>Owns only the temporary volume reduction; never changes the mute switch.</summary>
-public sealed class DuckOwnership(Func<float> readVolume, Action<float> writeVolume, Func<bool> readMute) : IMicrophone
+public sealed class DuckOwnership(Func<float> readVolume, Action<float> writeVolume, Func<bool> readMute,
+    Action<float, float>? remember = null, Action? forget = null) : IMicrophone
 {
     private readonly object gate = new();
     private bool owned, externalOverride;
@@ -20,11 +21,13 @@ public sealed class DuckOwnership(Func<float> readVolume, Action<float> writeVol
             original = readVolume();
             float target = original * (float)(RemainingPercent / 100);
             if (Math.Abs(target - original) < 0.0001f) return;
+            remember?.Invoke(original, target); // Persist before changing Windows volume.
             applied = target;
             owned = true;
             writeVolume(target);
             // Drivers may quantize the scalar: compare against the actual applied value.
             applied = readVolume();
+            remember?.Invoke(original, applied);
             owned = true;
         }
     }
@@ -34,6 +37,7 @@ public sealed class DuckOwnership(Func<float> readVolume, Action<float> writeVol
         {
             if (!owned) return;
             if (StillApplied()) writeVolume(original);
+            forget?.Invoke();
             owned = false; // Failed writes retain ownership for retry.
         }
     }
@@ -43,10 +47,11 @@ public sealed class DuckOwnership(Func<float> readVolume, Action<float> writeVol
         {
             externalOverride = true;
             // A changed mute switch alone must not strand our lowered volume.
-            if (owned && !StillApplied()) owned = false;
+            if (owned && !StillApplied()) { forget?.Invoke(); owned = false; }
         }
     }
     public void AllowAutomation() { lock (gate) externalOverride = false; }
 }
+
 
 

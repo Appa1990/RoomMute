@@ -85,10 +85,17 @@
       <TextBox Text="{Binding Settings.ReleaseDelay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Field}" ToolTipService.ShowDuration="30000" ToolTip="{Binding Text[ReleaseTip]}" AutomationProperties.Name="{Binding Text[Release]}"/>
      </StackPanel>
     </Grid>
-    <StackPanel Grid.Row="5" Margin="0,6,0,0" ToolTipService.ShowDuration="30000" ToolTip="{Binding Text[DuckTip]}">
-     <Grid><TextBlock Text="{Binding Text[Duck]}" Style="{StaticResource Label}"/><TextBlock Text="{Binding Settings.DuckPercent, StringFormat={}{0:0} %}" Foreground="{StaticResource AccentBrush}" HorizontalAlignment="Right" FontSize="12"/></Grid>
-     <Slider Value="{Binding Settings.DuckPercent}" Minimum="1" Maximum="100" Style="{StaticResource CompactSlider}" AutomationProperties.Name="{Binding Text[Duck]}"/>
-    </StackPanel>
+    <Grid Grid.Row="5" x:Name="VolumeControls" Margin="0,6,0,0">
+     <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="18"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+     <StackPanel ToolTip="{Binding Text[VolumeTip]}" ToolTipService.ShowDuration="30000">
+      <Grid><TextBlock Text="{Binding Text[Volume]}" Style="{StaticResource Label}"/><TextBlock Text="{Binding MicrophoneVolumeText}" Foreground="{StaticResource AccentBrush}" HorizontalAlignment="Right" FontSize="12"/></Grid>
+      <Slider Value="{Binding MicrophoneVolume, Mode=TwoWay}" Minimum="0" Maximum="100" TickFrequency="1" IsSnapToTickEnabled="True" IsEnabled="{Binding HasMicrophone}" Style="{StaticResource CompactSlider}" AutomationProperties.Name="{Binding Text[Volume]}"/>
+     </StackPanel>
+     <StackPanel Grid.Column="2" ToolTip="{Binding Text[DuckTip]}" ToolTipService.ShowDuration="30000">
+      <Grid><TextBlock Text="{Binding Text[Duck]}" Style="{StaticResource Label}"/><TextBlock Text="{Binding Settings.DuckPercent, StringFormat={}{0:0} %}" Foreground="{StaticResource AccentBrush}" HorizontalAlignment="Right" FontSize="12"/></Grid>
+      <Slider Value="{Binding Settings.DuckPercent}" Minimum="1" Maximum="100" Style="{StaticResource CompactSlider}" AutomationProperties.Name="{Binding Text[Duck]}"/>
+     </StackPanel>
+    </Grid>
     <Grid Grid.Row="6" x:Name="ShortcutSettings" Margin="0,5,0,0" VerticalAlignment="Top" ToolTip="{Binding Text[PushTip]}" ToolTipService.ShowDuration="30000">
  <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
  <StackPanel><TextBlock Text="{Binding Text[PushAnyway]}" Style="{StaticResource Label}"/><TextBlock Text="{Binding ShortcutStatus}" FontSize="11" Foreground="{StaticResource AccentBrush}" Margin="0,3,0,0"/></StackPanel>
@@ -143,16 +150,18 @@
    <Button Grid.Column="1" Content="{Binding ToggleText}" Command="{Binding ToggleCommand}" Style="{StaticResource SmallButton}"/>
   </Grid>
  </Border>
- <Grid Grid.Row="8" x:Name="Footer"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+ <Grid Grid.Row="8" x:Name="Footer"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
   <StackPanel Margin="0,0,14,0">
    <TextBlock Text="{Binding PendingText}" Foreground="{Binding PendingBrush}" FontSize="11" ToolTipService.ShowDuration="30000" ToolTip="{Binding Text[ApplyHint]}"/>
    <TextBlock Text="{Binding Notice}" Style="{StaticResource MutedText}" FontSize="11" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" ToolTip="{Binding Notice}" Margin="0,3,0,0"/>
    <TextBlock Text="{Binding Text[Privacy]}" Foreground="#71859E" FontSize="10" Margin="0,3,0,0"/>
   </StackPanel>
-  <Button x:Name="ApplyButton" Grid.Column="1" Content="{Binding Text[Apply]}" Command="{Binding SaveCommand}" Style="{StaticResource PrimaryButton}" Padding="18,9" VerticalAlignment="Center" ToolTipService.ShowDuration="30000" ToolTip="{Binding Text[ApplyHint]}"/>
+  <Button Grid.Column="1" x:Name="UpdateButton" Content="{Binding UpdateSummary}" Click="ShowUpdates" Style="{StaticResource SmallButton}" Margin="0,0,8,0" VerticalAlignment="Center"/>
+  <Button x:Name="ApplyButton" Grid.Column="2" Content="{Binding Text[Apply]}" Command="{Binding SaveCommand}" Style="{StaticResource PrimaryButton}" Padding="18,9" VerticalAlignment="Center" ToolTipService.ShowDuration="30000" ToolTip="{Binding Text[ApplyHint]}"/>
  </Grid>
 </Grid>
 </UserControl>
+
 
 
 

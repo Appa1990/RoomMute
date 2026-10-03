@@ -1,4 +1,4 @@
-# RoomMute 1.4.1
+# RoomMute 1.5.0
 
 Local voice coordination for people sharing the same room.
 
@@ -7,6 +7,18 @@ Local voice coordination for people sharing the same room.
 RoomMute is open source under the [MIT license](LICENSE). NAudio's license is included in [THIRD-PARTY-NOTICES.txt](THIRD-PARTY-NOTICES.txt).
 
 Windows-Desktop-Anwendung (.NET 8 / WPF) für zwei PCs im selben Raum. Der lokale Mikrofonpegel steuert die Sprechkoordination. Über UDP werden ausschließlich Statusdaten gesendet; keine Audiodaten werden gespeichert, übertragen oder transkribiert.
+
+## Neu in 1.5.0
+
+- **Updates im Tool:** Versionsanzeige und Hinweis auf neue stabile GitHub-Releases, Prüfung beim Start und alle 6 Stunden sowie manuell. Der Update-Dialog zeigt die Patchnotes des Releases, lädt das passende Windows-Paket herunter und prüft Dateigröße und SHA-256 gegen die GitHub-Release-Metadaten. Internet ist nur für diese Funktion nötig; Audioüberwachung und LAN-Verbindung laufen auch bei fehlgeschlagener Updateprüfung weiter.
+- **Neue Version starten:** Das geprüfte ZIP wird in einen neuen Ordner unter `%LocalAppData%\RoomMute\Updates` entpackt. RoomMute stellt zuerst den Mikrofonpegel wieder her und beendet die alte Instanz. Die neue Instanz wartet auf deren Ende, übernimmt die gespeicherten Einstellungen und aktualisiert ihren Autostartpfad. Offene Einstellungsänderungen zuerst übernehmen. Der bisherige Programmordner bleibt erhalten; das neue Programm läuft aus dem Updateordner. Kein stilles Update im Hintergrund.
+- **Mikrofonlautstärke:** Aktueller Windows-Eingangspegel in Prozent direkt neben Ducking. Der Regler verändert ihn sofort und pausiert die Automation; mit Automation aktivieren wieder fortsetzen. Während Ducking wird der tatsächliche abgesenkte Eingangspegel angezeigt. Der Regler ist unabhängig vom gemessenen dBFS-Signal und vom relativen Ducking-Restpegel.
+- **Wiederherstellung nach Neustart:** Vor jeder automatischen Absenkung werden Geräte-ID, ursprünglicher Pegel und angewendeter Wert dauerhaft unter `%LocalAppData%\RoomMute\VolumeRecovery` gespeichert. Nach normalem Restore wird der Eintrag entfernt. Beim nächsten Start beziehungsweise bei erneuter Geräteauswahl wird eine verbliebene eigene Absenkung zurückgenommen, sofern der aktuelle Pegel noch zum gespeicherten angewendeten Wert passt. Externe Pegeländerungen und manuelles Mute bleiben erhalten; nicht erreichbare Geräte werden später erneut geprüft.
+- Beim Windows-Sitzungsende wird die Automation gestoppt und der Pegel vor dem Exit wiederhergestellt. Fehlerdialoge verhindern erneutes Ducking während einer Wiederherstellung.
+
+Ältere Versionen haben den ursprünglichen Pegel nicht dauerhaft gespeichert. Einen bereits vor dem Upgrade abgesenkten Eingang einmal am neuen Mikrofonregler auf deinen gewünschten Wert setzen. Bei Stromausfall, fehlendem Gerät oder beschädigter Wiederherstellungsdatei lässt sich ein Restore nicht immer garantieren; im Zweifel den angezeigten Windows-Pegel prüfen.
+
+Updateprüfungen rufen ausschließlich das öffentliche GitHub-Repository auf, ohne Konto oder Token. Sie übertragen keine Mikrofon-, Audio- oder Partnerdaten. GitHub erhält wie bei einem normalen Abruf Netzwerk-/HTTP-Metadaten. Patchnotes bleiben in der Sprache des Releases. Downloads im Tool laufen über GitHub und werden separat von den Homepage-Downloads gezählt.
 
 ## Neu in 1.4.1
 
@@ -58,7 +70,7 @@ Beim Aufnehmen wird der alte globale Shortcut vorübergehend freigegeben. Abbrec
 6. Ducking-Restpegel und Schwellwerte einstellen, **Änderungen übernehmen**, für den automatischen Betrieb **Mit Windows starten** aktivieren. Beim nächsten Öffnen startet die Verbindung selbstständig; beim ersten Einrichten bei Bedarf **Starten** drücken.
 7. Einzeln und gleichzeitig sprechen und die verbleibende Übertragung in der Voice-Anwendung prüfen.
 
-Vorhandene Einstellungen bleiben unter `%LocalAppData%\RoomMute\config.json` erhalten. Ältere Konfigurationen ohne Ducking-Einstellung erhalten automatisch 20 %. Die persönliche config.json nicht zwischen PCs kopieren: jeder PC braucht seine eigene Client-ID. Alte Konfigurationen ohne Shortcut erhalten F8. Beide PCs sollten auf 1.4 aktualisiert werden; ältere Versionen muten weiterhin vollständig.
+Vorhandene Einstellungen bleiben unter `%LocalAppData%\RoomMute\config.json` erhalten. Ältere Konfigurationen ohne Ducking-Einstellung erhalten automatisch 20 %. Die persönliche config.json nicht zwischen PCs kopieren: jeder PC braucht seine eigene Client-ID. Alte Konfigurationen ohne Shortcut erhalten F8. Beide PCs sollten auf 1.5 aktualisiert werden; ältere Versionen muten weiterhin vollständig.
 
 Für einen lokalen Pegeltest die Partner-IP leer lassen. Es wird dann keine Netzwerkverbindung oder automatische Absenkung aktiviert.
 
@@ -104,7 +116,7 @@ dotnet run --project RoomMute -c Release
 ./publish.ps1
 ```
 
-Die 54 Prüfungen laufen als ausführbares Testprojekt, nicht über `dotnet test`. Sie umfassen VAD, Priorität, Mute-Regressionsfälle, Ducking/Wiederherstellung, externe Änderungen, Treiber-Rundung, Sessionwechsel, Paketverlust/-reihenfolge und echten bidirektionalen UDP-Loopback, Push-to-talk-Wiederherstellung, automatische Startwiederholungen und einen später gestarteten beziehungsweise neu gestarteten Partner. Zusätzlich wurden der native Shortcut-Lebenszyklus und beide Dashboard-Sprachen bei beiden Fenstergrößen geprüft.
+Die 67 Prüfungen laufen als ausführbares Testprojekt, nicht über `dotnet test`. Sie umfassen VAD, Priorität, Mute-Regressionsfälle, Ducking/Wiederherstellung, externe Änderungen, Treiber-Rundung, Sessionwechsel, Paketverlust/-reihenfolge und echten bidirektionalen UDP-Loopback, Push-to-talk-Wiederherstellung, automatische Startwiederholungen und einen später gestarteten beziehungsweise neu gestarteten Partner. Zusätzlich wurden der native Shortcut-Lebenszyklus und beide Dashboard-Sprachen bei beiden Fenstergrößen geprüft.
 
 Das Publish-Skript erzeugt einen versionierten Ordner und ein ZIP unter `artifacts/`, einschließlich .NET-Laufzeit und Lizenzhinweisen. Für Restore/Publish kann Internet nötig sein; die fertige App funktioniert offline. Das Paket ist nicht codesigniert.
 
@@ -125,6 +137,7 @@ NAudio.Wasapi und NAudio.Core 2.3.0, MIT-Lizenz, netstandard2.0-kompatibler Zwei
 - [NAudio 2.x](https://github.com/naudio/NAudio/tree/release/2.x)
 
 Nicht enthalten: Autodiscovery, Gruppen, Pairing, Installer oder automatische Updates. Der echte Zwei-PC-Test mit euren Mikrofonen ist zusätzlich zu den automatisierten Prüfungen erforderlich.
+
 
 
 

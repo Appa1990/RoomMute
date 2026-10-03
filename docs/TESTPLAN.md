@@ -37,7 +37,7 @@ Diese Hardware-Abnahme wurde nicht automatisch durchgeführt.
 - Beim Anmelden Mikrofon oder Netzwerk noch nicht verfügbar: Status zeigt den Wartezustand, danach wird automatisch erneut gestartet. Das gespeicherte Mikrofon muss erhalten bleiben.
 - Während eines automatischen Startversuchs Stop drücken: keine weiteren Versuche bis zum nächsten bewussten Start oder Programmneustart.
 
-Automatisiert geprüft: 54 Logik-/Netzwerktests, nativer Hotkey-Lebenszyklus ohne reale Tastatureingabe und Dashboard-Renderings DE/EN bei beiden Fenstergrößen. Eine echte Windows-Anmeldung und der Zwei-PC-Test mit physischen Mikrofonen bleiben Teil dieser Hardware-Abnahme.
+Automatisiert geprüft: 67 Logik-/Netzwerktests, nativer Hotkey-Lebenszyklus ohne reale Tastatureingabe und Dashboard-Renderings DE/EN bei beiden Fenstergrößen. Eine echte Windows-Anmeldung und der Zwei-PC-Test mit physischen Mikrofonen bleiben Teil dieser Hardware-Abnahme.
 
 ## Freie Shortcut-Aufnahme
 
@@ -54,3 +54,16 @@ Automatisiert geprüft: 54 Logik-/Netzwerktests, nativer Hotkey-Lebenszyklus ohn
 - Strg + Mouse3 aufnehmen; zuerst Strg oder zuerst die mittlere Taste loslassen: Freigabe endet jeweils.
 - Maus bewegen oder Mausrad drehen: kein Override. Manuelles Mute bleibt erhalten.
 - Von Mouse3 auf Tastatur, anschließend deaktivieren: Registrierung wechselt ohne zurückbleibende Freigabe.
+
+## Updates und Mikrofonpegel 1.5.0
+
+- Mikrofonlautstärke mit Windows-Eingangsregler vergleichen, auch während Ducking. Ändern pausiert Automation, setzt den gewählten Wert sofort und lässt manuelles Mute erhalten.
+- Während Ducking Windows herunterfahren/abmelden: beim nächsten Start ursprünglicher Pegel. Zusätzlich eine Instanz testweise hart beenden; nach Neustart muss der gespeicherte eigene Eingriff wiederhergestellt werden. Eine zwischenzeitliche externe Pegeländerung bleibt erhalten.
+- Mikrofon nach fehlgeschlagenem Restore abziehen und wieder anschließen: Wiederherstellung bei nächstem Startversuch/Geräteauswahl; kein Wechsel auf ein anderes Aufnahmegerät.
+- Update-Dialog zeigt installierte/neuste Version und Patchnotes. Ohne Internet oder bei API-Limit klarer Fehlerstatus; LAN/Audio laufen weiter.
+- Neues stabiles Release für die passende Architektur veröffentlichen: Hinweis im Tool. Prereleases und ältere Versionen dürfen kein Update anbieten.
+- Download mit Unterbrechung/falschem Hash testen: kein Start einer ungeprüften Version. Das vollständige geprüfte ZIP lässt sich über Downloadordner öffnen.
+- Neue Version starten: eigene Pegelabsenkung wird zuerst zurückgenommen, alte Instanz endet, genau eine neue Instanz startet. Konfiguration und Sprache bleiben erhalten. Nach Anmeldung funktioniert Autostart aus dem neuen Ordner.
+- Änderungen vor Updatewechsel übernehmen. Bei Restorefehler kein Wechsel; Wiederherstellungsdatei für späteren Versuch behalten.
+
+Automatisiert: persistierte Neustart-Recovery, externe Änderungen, manuelles Mute, fehlgeschlagene Writes, Treiberrundung, Update-Metadaten, SHA-256, Größenprüfung, Abbruch und erneute Installationsprüfung. Ein echtes Herunterfahren sowie der Wechsel einer laufenden Hardware-Sitzung werden hier als manuelle Abnahme geprüft.

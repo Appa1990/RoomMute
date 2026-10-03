@@ -5,7 +5,7 @@ using System.Windows.Threading;
 using RoomMute.Services;
 namespace RoomMute.ViewModels;
 
-public sealed class MainViewModel : ObservableObject, IDisposable
+public sealed partial class MainViewModel : ObservableObject, IDisposable
 {
     private readonly LogService log;
     private readonly ConfigurationService configuration;
@@ -152,6 +152,8 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
     private void SettingsChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
+        if (e.PropertyName == nameof(SettingsViewModel.ShortcutLabel)) return;
+        if (initialized && !running && e.PropertyName == nameof(SettingsViewModel.AudioDeviceId)) Guard(SelectIdleMicrophone);
         hasPendingChanges = true;
         Changed(nameof(PendingText));
         Changed(nameof(PendingBrush));
@@ -178,6 +180,9 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     public void Initialize()
     {
         initialized = true;
+        microphone.RecoverPending();
+        Guard(SelectIdleMicrophone);
+        InitializeUpdates();
         try { StartupService.Apply(config.StartWithWindows); }
         catch (Exception ex) { log.Write("Startup registration could not be refreshed", ex); }
         ConfigureShortcut();
@@ -468,12 +473,15 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     }
     public void EmergencyRestore()
     {
+        enabled = false; // Prevent re-ducking during shutdown or error dialogs.
+
         try { microphone.Restore(); } catch (Exception ex) { log.Write("Emergency restore failed", ex); }
     }
     public void Dispose()
     {
         if (disposed) return;
         disposed = true;
+        DisposeUpdates();
         autoStart.Cancel(); retryTimer.Stop();
         pushToTalk?.Dispose();
         Text.PropertyChanged -= LanguageChanged;
@@ -484,6 +492,9 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     }
 }
 public sealed record LanguageChoice(string Code, string Label) { public override string ToString() => Label; }
+
+
+
 
 
 

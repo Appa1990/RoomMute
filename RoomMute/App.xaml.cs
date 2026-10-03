@@ -18,6 +18,15 @@ public partial class App : Application
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+        if (e.Args.Length == 2 && e.Args[0] == "--wait-for-process" && int.TryParse(e.Args[1], out int previousId))
+        {
+            try
+            {
+                using var previous = Process.GetProcessById(previousId);
+                if (previous.ProcessName == "RoomMute" && !previous.WaitForExit(15000)) { Shutdown(1); return; }
+            }
+            catch (Exception error) when (error is ArgumentException or InvalidOperationException) { } // The old process already exited.
+        }
         UiText.Current.Language = new ConfigurationService(log).Load().Language;
         if (e.Args.Length == 2 && e.Args[0] == "--verify-shortcut")
         {
@@ -35,6 +44,8 @@ public partial class App : Application
             log.Write("Unhandled UI error", args.Exception);
             model?.EmergencyRestore();
             args.Handled = true;
+            if (e.Args.Length == 2 && e.Args[0] == "--render-preview")
+            { File.WriteAllText(Path.Combine(e.Args[1], "preview-error.log"), args.Exception.ToString()); Shutdown(1); return; }
             MessageBox.Show(UiText.Current["Fatal"] + "\n\n" + args.Exception.Message, "RoomMute");
             Shutdown(1);
         };
@@ -43,7 +54,11 @@ public partial class App : Application
             log.Write("Unhandled process error", args.ExceptionObject as Exception);
             model?.EmergencyRestore();
         };
-        SessionEnding += (_, _) => model?.EmergencyRestore();
+        SessionEnding += (_, _) =>
+        {
+            if (MainWindow is MainWindow window) window.AllowClose = true;
+            model?.PrepareForShutdown();
+        };
         try
         {
             bool preview = e.Args.Length == 2 && e.Args[0] == "--render-preview";
@@ -70,6 +85,8 @@ public partial class App : Application
         {
             log.Write("Startup failed", error);
             model?.EmergencyRestore();
+            if (e.Args.Length == 2 && e.Args[0] == "--render-preview")
+            { File.WriteAllText(Path.Combine(e.Args[1], "preview-error.log"), error.ToString()); Shutdown(1); return; }
             MessageBox.Show(UiText.Current["StartupFailed"] + "\n\n" + error.Message, "RoomMute");
             Shutdown(1);
         }
@@ -95,7 +112,7 @@ public partial class App : Application
             window.Dispatcher.Invoke(() => { }, DispatcherPriority.ApplicationIdle);
             window.UpdateLayout();
             var root = (DashboardView)window.Content;
-            foreach (FrameworkElement control in new FrameworkElement[] { root.AudioActions, root.ShortcutSettings, root.ApplyButton, root.NetworkCard })
+            foreach (FrameworkElement control in new FrameworkElement[] { root.AudioActions, root.ShortcutSettings, root.VolumeControls, root.UpdateButton, root.ApplyButton, root.NetworkCard })
             {
                 var bounds = control.TransformToAncestor(root).TransformBounds(new Rect(0, 0, control.ActualWidth, control.ActualHeight));
                 if (bounds.Left < 0 || bounds.Top < 0 || bounds.Right > root.ActualWidth + 1 || bounds.Bottom > root.ActualHeight + 1)
@@ -129,6 +146,17 @@ public partial class App : Application
             captureEncoder.Frames.Add(BitmapFrame.Create(captureBitmap));
             using (var captureStream = File.Create(Path.Combine(directory, $"shortcut-recorder-{language}.png"))) captureEncoder.Save(captureStream);
             capture.Close();
+            var updatePreview = new UpdateWindow((MainViewModel)window.DataContext)
+            {
+                Owner = window, WindowStartupLocation = WindowStartupLocation.Manual,
+                Left = -32000, Top = -32000, ShowActivated = false
+            };
+            updatePreview.Show(); updatePreview.UpdateLayout();
+            var updateBitmap = new RenderTargetBitmap((int)updatePreview.ActualWidth, (int)updatePreview.ActualHeight, 96, 96, PixelFormats.Pbgra32);
+            updateBitmap.Render(updatePreview);
+            var updateEncoder = new PngBitmapEncoder(); updateEncoder.Frames.Add(BitmapFrame.Create(updateBitmap));
+            using (var updateStream = File.Create(Path.Combine(directory, $"updates-{language}.png"))) updateEncoder.Save(updateStream);
+            updatePreview.Close();
         }
         UiText.Current.Language = originalLanguage;
         trace.Flush();
@@ -145,6 +173,10 @@ public partial class App : Application
         base.OnExit(e);
     }
 }
+
+
+
+
 
 
 

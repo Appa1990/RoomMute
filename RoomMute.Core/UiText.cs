@@ -10,6 +10,27 @@ public sealed class UiText : INotifyPropertyChanged
     private static readonly IReadOnlyDictionary<string, (string De, string En)> Strings =
         new Dictionary<string, (string De, string En)>
     {
+        ["Volume"] = ("Mikrofonlautstärke", "Microphone volume"),
+        ["VolumeTip"] = ("Aktueller Windows-Eingangspegel. Änderungen gelten sofort und pausieren die Automation. Während Ducking zeigt der Regler den tatsächlich abgesenkten Pegel. Der manuelle Mute-Schalter bleibt erhalten.", "Current Windows input volume. Changes apply immediately and pause automation. During ducking the slider shows the actual lowered input. Manual mute stays enabled."),
+        ["VolumeManual"] = ("Mikrofonpegel geändert. Automation pausiert.", "Microphone volume changed. Automation paused."),
+        ["Updates"] = ("Updates", "Updates"),
+        ["UpdateIdle"] = ("Noch nicht geprüft.", "Not checked yet."),
+        ["UpdateChecking"] = ("Suche nach Updates …", "Checking for updates …"),
+        ["UpdateAvailable"] = ("Neue Version verfügbar", "New version available"),
+        ["UpdateCurrent"] = ("Du hast die aktuelle Version.", "You are up to date."),
+        ["UpdateFailed"] = ("Update konnte nicht abgeschlossen werden. Erneut versuchen.", "Could not complete the update. Try again."),
+        ["UpdateNoNotes"] = ("Nach einer Prüfung erscheinen hier die Patchnotes der neuesten Version.", "Check for updates to see the latest release notes here."),
+        ["UpdateCheck"] = ("Jetzt prüfen", "Check now"),
+        ["UpdateDownload"] = ("Update herunterladen", "Download update"),
+        ["UpdateInstall"] = ("Neue Version starten", "Start new version"),
+        ["UpdateFolder"] = ("Downloadordner", "Download folder"),
+        ["UpdateDownloading"] = ("Update wird heruntergeladen und geprüft …", "Downloading and verifying update …"),
+        ["UpdateInstalling"] = ("Neue Version wird vorbereitet …", "Preparing the new version …"),
+        ["UpdateReady"] = ("Download geprüft. Mit „Neue Version starten“ wechseln.", "Download verified. Choose “Start new version” to switch."),
+        ["UpdateApplyFirst"] = ("Bitte zuerst die offenen Einstellungsänderungen übernehmen.", "Apply your pending settings changes first."),
+        ["UpdateRestoreFailed"] = ("Mikrofon konnte nicht wiederhergestellt werden. Updatewechsel abgebrochen.", "Could not restore microphone input. Update switch canceled."),
+        ["UpdateVersions"] = ("Installiert: {0} · Neueste Version: {1}", "Installed: {0} · Latest: {1}"),
+        ["UpdatePrivacy"] = ("Prüfung bei Start und alle 6 Stunden über GitHub. Keine Mikrofon- oder Audiodaten werden gesendet. Patchnotes erscheinen in der Sprache des Releases.", "Checks GitHub at startup and every 6 hours. No microphone or audio data is sent. Release notes use the release's language."),
         ["RecordShortcut"] = ("Aufnehmen", "Record"),
         ["RecordTitle"] = ("Shortcut aufnehmen", "Record shortcut"),
         ["RecordHint"] = ("Drücke eine Taste/Kombination (z. B. Strg + 5) oder Mouse3 (mittlere Maustaste). Esc bricht ab. Nur Modifikatortasten und F12 können nicht aufgenommen werden.", "Press a key/combination (e.g. Ctrl + 5) or Mouse3 (middle mouse button). Esc cancels. Modifier-only keys and F12 cannot be recorded."),
@@ -161,6 +182,7 @@ public sealed class UiText : INotifyPropertyChanged
         return message; // Windows/driver error details retain their system-provided wording.
     }
 }
+
 
 
 

@@ -1,6 +1,11 @@
 using RoomMute.Core;
 using System.Text.Json;
 
+if (args.Length == 2 && args[0] == "--verify-release")
+{
+    await RoomMute.Tests.UpdateIntegration.VerifyRealRelease(args[1]);
+    return;
+}
 int passed = 0;
 void Check(string name, Action test)
 {
@@ -490,6 +495,96 @@ Check("Mouse3 held combination ends on mouse or modifier release", () =>
     down.Remove(4); Assert(!gesture.IsHeld(down.Contains));
     down.Add(4); down.Remove(0x11); Assert(!gesture.IsHeld(down.Contains));
 });
+Check("Shutdown recovery restores a saved duck after creating a new journal instance", () =>
+{
+    using var fixture = new RecoveryFixture();
+    var duck = fixture.Duck(); duck.AttenuateAutomatically();
+    Assert(Math.Abs(fixture.Volume - .16f) < .001);
+    var reopened = new VolumeRecoveryJournal(fixture.Directory);
+    Assert(reopened.Recover(reopened.ReadAll().Single(), () => fixture.Volume, value => fixture.Volume = value));
+    Assert(Math.Abs(fixture.Volume - .8f) < .001 && reopened.ReadAll().Count == 0);
+});
+Check("Recovery preserves a volume changed since the previous session", () =>
+{
+    using var fixture = new RecoveryFixture(); fixture.Duck().AttenuateAutomatically(); fixture.Volume = .6f;
+    Assert(!fixture.Journal.Recover(fixture.Journal.ReadAll().Single(), () => fixture.Volume, value => fixture.Volume = value));
+    Assert(fixture.Volume == .6f && fixture.Journal.ReadAll().Count == 0);
+});
+Check("Failed startup recovery retains its record for the next retry", () =>
+{
+    using var fixture = new RecoveryFixture(); fixture.Duck().AttenuateAutomatically(); bool failed = false;
+    try { fixture.Journal.Recover(fixture.Journal.ReadAll().Single(), () => fixture.Volume, _ => throw new IOException()); }
+    catch (IOException) { failed = true; }
+    Assert(failed && fixture.Journal.ReadAll().Count == 1);
+});
+Check("Recovery never changes manual mute", () =>
+{
+    using var fixture = new RecoveryFixture(); fixture.Duck().AttenuateAutomatically(); fixture.Muted = true;
+    fixture.Journal.Recover(fixture.Journal.ReadAll().Single(), () => fixture.Volume, value => fixture.Volume = value);
+    Assert(fixture.Muted && fixture.Volume == .8f);
+});
+Check("Failed write-ahead persistence prevents microphone reduction", () =>
+{
+    float volume = .8f;
+    var duck = new DuckOwnership(() => volume, value => volume = value, () => false, (_, _) => throw new IOException());
+    try { duck.AttenuateAutomatically(); } catch (IOException) { }
+    Assert(volume == .8f && !duck.AttenuatedByRoomMute);
+});
+Check("Normal restore and external volume choice remove stale recovery records", () =>
+{
+    using var fixture = new RecoveryFixture(); var duck = fixture.Duck();
+    duck.AttenuateAutomatically(); duck.Restore(); Assert(fixture.Journal.ReadAll().Count == 0);
+    duck.AttenuateAutomatically(); fixture.Volume = .7f; duck.ExternalChange();
+    Assert(fixture.Volume == .7f && fixture.Journal.ReadAll().Count == 0);
+});
+Check("Failed regular restore retains ownership and persistent recovery record", () =>
+{
+    using var fixture = new RecoveryFixture(); bool fail = false;
+    var duck = new DuckOwnership(() => fixture.Volume, value => { if (fail) throw new IOException(); fixture.Volume = value; }, () => false,
+        (original, applied) => fixture.Journal.Save("test-device", original, applied), () => fixture.Journal.Clear("test-device"));
+    duck.AttenuateAutomatically(); fail = true;
+    try { duck.Restore(); } catch (IOException) { }
+    Assert(duck.AttenuatedByRoomMute && fixture.Journal.ReadAll().Count == 1);
+});
+Check("Recovery stores the actual driver-quantized input level", () =>
+{
+    using var fixture = new RecoveryFixture();
+    var duck = new DuckOwnership(() => fixture.Volume, value => fixture.Volume = (float)Math.Round(value, 1), () => false,
+        (original, applied) => fixture.Journal.Save("test-device", original, applied), () => fixture.Journal.Clear("test-device"));
+    duck.AttenuateAutomatically(); Assert(fixture.Journal.ReadAll().Single().Applied == fixture.Volume);
+    fixture.Journal.Recover(fixture.Journal.ReadAll().Single(), () => fixture.Volume, value => fixture.Volume = value);
+    Assert(fixture.Volume == .8f);
+});
+Check("Update versions normalize revision and reject downgrade", () =>
+{
+    var release = UpdateRelease.Parse(RoomMute.Tests.UpdateIntegration.ReleaseJson(new string('a',64), 100), "win-x64");
+    Assert(release.NewerThan(new Version(1,5,0)) && !release.NewerThan(new Version(9,1,0,0)) && !release.NewerThan(new Version(10,0,0)));
+});
+Check("Update parser rejects foreign download URLs and missing verification hashes", () =>
+{
+    foreach (string json in new[] { RoomMute.Tests.UpdateIntegration.ReleaseJson(new string('a',64), 100, "https://example.com/tool.zip"),
+        RoomMute.Tests.UpdateIntegration.ReleaseJson("", 100) })
+    {
+        bool failed = false; try { UpdateRelease.Parse(json,"win-x64"); } catch (InvalidDataException) { failed = true; }
+        Assert(failed);
+    }
+});
+Check("Update parser excludes prereleases and unsupported architecture", () =>
+{
+    bool failed = false;
+    try { UpdateRelease.Parse(RoomMute.Tests.UpdateIntegration.ReleaseJson(new string('a',64), 100, prerelease:true),"win-x64"); }
+    catch (InvalidDataException) { failed = true; } Assert(failed);
+    failed = false;
+    try { UpdateRelease.Parse(RoomMute.Tests.UpdateIntegration.ReleaseJson(new string('a',64),100),"win-arm64"); }
+    catch (InvalidDataException) { failed = true; } Assert(failed);
+});
+Check("Update metadata retains plain release notes and bounds package size", () =>
+{
+    var release = UpdateRelease.Parse(RoomMute.Tests.UpdateIntegration.ReleaseJson(new string('a',64),100),"win-x64");
+    Assert(release.Notes.Contains("Second line")); bool failed = false;
+    try { UpdateRelease.Parse(RoomMute.Tests.UpdateIntegration.ReleaseJson(new string('a',64),long.MaxValue),"win-x64"); }
+    catch (InvalidDataException) { failed = true; } Assert(failed);
+});
 Check("Legacy settings get F8 and reject reserved or unknown keys", () =>
 {
     var old = JsonSerializer.Deserialize<AppConfig>("{}", NetworkMessage.JsonOptions)!;
@@ -506,6 +601,8 @@ try
     Console.WriteLine("PASS Actual UDP handshake with late partner and partner restart");
 }
 catch (Exception ex) { Console.Error.WriteLine("FAIL Late partner integration: " + ex); Environment.Exit(1); }
+try { await RoomMute.Tests.UpdateIntegration.Run(); passed++; Console.WriteLine("PASS Verified update download, corruption rejection, cancellation and install re-verification"); }
+catch (Exception error) { Console.Error.WriteLine("FAIL Update integration: " + error); Environment.Exit(1); }
 Console.WriteLine($"{passed} tests passed.");
 
 sealed class FakeMicrophone : IMicrophone
@@ -524,4 +621,17 @@ sealed class FakeMicrophone : IMicrophone
 
 
 
+
+
+sealed class RecoveryFixture : IDisposable
+{
+    public string Directory { get; } = Path.Combine(Path.GetTempPath(), "RoomMute-recovery-test-" + Guid.NewGuid().ToString("N"));
+    public VolumeRecoveryJournal Journal { get; }
+    public float Volume = .8f;
+    public bool Muted;
+    public RecoveryFixture() => Journal = new(Directory);
+    public DuckOwnership Duck() => new(() => Volume, value => Volume = value, () => Muted,
+        (original, applied) => Journal.Save("test-device", original, applied), () => Journal.Clear("test-device"));
+    public void Dispose() { if (System.IO.Directory.Exists(Directory)) System.IO.Directory.Delete(Directory,true); }
+}
 
