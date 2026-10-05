@@ -10,6 +10,12 @@ public sealed class UiText : INotifyPropertyChanged
     private static readonly IReadOnlyDictionary<string, (string De, string En)> Strings =
         new Dictionary<string, (string De, string En)>
     {
+        ["NoiseFilter"] = ("KI-Geräuschfilter", "AI noise filter"),
+        ["NoiseFilterTip"] = ("RNNoise filtert nur RoomMutes Erkennung. Der Pegelbalken zeigt das gefilterte Signal. Sprache muss zusätzlich die eingestellte Sprachsicherheit erreichen. Keine Cloud, keine Aufzeichnung, keine Änderung am Audio für Discord/Teamspeak. Mit Übernehmen aktivieren.", "RNNoise filters RoomMute detection only. The meter shows the filtered signal. Speech must also reach the selected speech confidence. No cloud, no recording, no change to Discord/Teamspeak audio. Activate with Apply changes."),
+        ["SpeechConfidence"] = ("Sprachsicherheit", "Speech confidence"),
+        ["ConfidenceTip"] = ("Höher: weniger Fehlstarts durch Atem-/Vape-Geräusche, aber leise Sprache kann später erkannt werden. Niedriger: empfindlichere Erkennung. 60 % ist ein Ausgangspunkt, keine Garantie. Sprech-/Ruhe-Schwelle und Attack/Release gelten weiterhin.", "Higher: fewer false starts from breathing/vape noise, but quiet speech may be detected later. Lower: more sensitive detection. 60% is a starting point, not a guarantee. Speak/silence thresholds and attack/release still apply."),
+        ["FilterLoadFailed"] = ("Geräuschfilter konnte nicht geladen werden. Paket vollständig entpacken oder KI-Geräuschfilter ausschalten und übernehmen.", "Could not load the noise filter. Extract the complete package, or turn off AI noise filter and apply changes."),
+        ["ConfidenceInvalid"] = ("Sprachsicherheit muss zwischen 20 und 95 % liegen.", "Speech confidence must be between 20 and 95%."),
         ["Volume"] = ("Mikrofonlautstärke", "Microphone volume"),
         ["VolumeTip"] = ("Aktueller Windows-Eingangspegel. Änderungen gelten sofort und pausieren die Automation. Während Ducking zeigt der Regler den tatsächlich abgesenkten Pegel. Der manuelle Mute-Schalter bleibt erhalten.", "Current Windows input volume. Changes apply immediately and pause automation. During ducking the slider shows the actual lowered input. Manual mute stays enabled."),
         ["VolumeManual"] = ("Mikrofonpegel geändert. Automation pausiert.", "Microphone volume changed. Automation paused."),
@@ -182,7 +188,3 @@ public sealed class UiText : INotifyPropertyChanged
         return message; // Windows/driver error details retain their system-provided wording.
     }
 }
-
-
-
-

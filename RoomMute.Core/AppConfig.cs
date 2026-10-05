@@ -13,6 +13,8 @@ public sealed class AppConfig
     public int Port { get; set; } = 48731;
     public int Priority { get; set; } = 10;
     public string AudioDeviceId { get; set; } = "";
+    public bool NoiseSuppression { get; set; } = true;
+    public double SpeechConfidence { get; set; } = 60;
     public double SpeakThreshold { get; set; } = -35;
     public double SilenceThreshold { get; set; } = -42;
     public double DuckPercent { get; set; } = 20;
@@ -41,6 +43,7 @@ public sealed class AppConfig
         if (!double.IsFinite(SpeakThreshold) || !double.IsFinite(SilenceThreshold) ||
             SpeakThreshold is < -90 or > 0 || SilenceThreshold is < -96 or > 0 ||
             SilenceThreshold >= SpeakThreshold) return "Die Ruhe-Schwelle muss unter der Sprech-Schwelle liegen.";
+        if (!double.IsFinite(SpeechConfidence) || SpeechConfidence is < 20 or > 95) return "Sprachsicherheit muss zwischen 20 und 95 % liegen.";
         if (!double.IsFinite(DuckPercent) || DuckPercent is < 1 or > 100) return "Ducking-Restpegel muss zwischen 1 und 100 % liegen.";
         if (AttackDelay is < 0 or > 2000 || ReleaseDelay is < 50 or > 5000) return "Attack: 0–2000 ms; Release: 50–5000 ms.";
         if (HeartbeatInterval is < 250 or > 1000 || PartnerTimeout is < 2000 or > 10000 ||
@@ -49,8 +52,3 @@ public sealed class AppConfig
     }
     public AppConfig Copy() => (AppConfig)MemberwiseClone();
 }
-
-
-
-
-

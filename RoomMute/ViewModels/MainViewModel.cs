@@ -317,7 +317,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
                 if (generation == currentGeneration && running) Fail(error);
             }));
             audio.Failed += audioErrorHandler;
-            audio.Start(config.AudioDeviceId);
+            audio.Start(config.AudioDeviceId, config.NoiseSuppression);
             if (!string.IsNullOrWhiteSpace(config.PartnerIp))
             {
             var current = new NetworkService(config);
@@ -369,7 +369,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             changed = detector.Speaking;
             detector.Reset();
         }
-        else changed = detector.Update(level, now, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), config);
+        else changed = detector.Update(level, now, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), config, reading.SpeechProbability);
         if (changed)
         {
             log.Write(detector.Speaking ? "Local speaking started" : "Local speaking stopped");
@@ -492,14 +492,3 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     }
 }
 public sealed record LanguageChoice(string Code, string Label) { public override string ToString() => Label; }
-
-
-
-
-
-
-
-
-
-
-

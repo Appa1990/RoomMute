@@ -1,14 +1,18 @@
 using NAudio.CoreAudioApi;
 using NAudio.Wave;
+using RoomMute.Core.Audio;
 namespace RoomMute.Services;
 
 public sealed record AudioDevice(string Id, string Name) { public override string ToString() => Name; }
-public sealed record AudioReading(double Decibels, long ReceivedAt);
+public sealed record AudioReading(double Decibels, long ReceivedAt, double? SpeechProbability = null);
 
 public sealed class AudioMonitorService : IDisposable
 {
+    private readonly object sync = new();
     private MMDevice? device;
     private WasapiCapture? capture;
+    private DetectionAudioProcessor? processor;
+    private bool failed;
     private AudioReading latest = new(-96, 0);
     public AudioReading Latest => Volatile.Read(ref latest);
     public event Action<Exception>? Failed;
@@ -24,46 +28,48 @@ public sealed class AudioMonitorService : IDisposable
         return result;
     }
 
-    public void Start(string deviceId)
+    public void Start(string deviceId, bool noiseSuppression = true)
     {
         Dispose();
-        using var enumerator = new MMDeviceEnumerator();
-        device = enumerator.GetDevice(deviceId);
-        capture = new WasapiCapture(device, true, 20);
-        var format = capture.WaveFormat;
-        bool supported = (format.Encoding == WaveFormatEncoding.IeeeFloat && format.BitsPerSample == 32) ||
-            (format.Encoding == WaveFormatEncoding.Pcm && format.BitsPerSample is 16 or 24 or 32);
-        if (!supported) throw new NotSupportedException($"Nicht unterstütztes Mikrofonformat: {format}");
-        capture.DataAvailable += OnData;
-        capture.RecordingStopped += OnStopped;
-        latest = new(-96, Environment.TickCount64);
-        capture.StartRecording();
+        try
+        {
+            using var enumerator = new MMDeviceEnumerator();
+            device = enumerator.GetDevice(deviceId);
+            capture = new WasapiCapture(device, true, 20);
+            var format = capture.WaveFormat;
+            bool supported = (format.Encoding == WaveFormatEncoding.IeeeFloat && format.BitsPerSample == 32) ||
+                (format.Encoding == WaveFormatEncoding.Pcm && format.BitsPerSample is 16 or 24 or 32);
+            if (!supported) throw new NotSupportedException($"Nicht unterstütztes Mikrofonformat: {format}");
+                        RnNoiseSuppressor? suppressor;
+            try { suppressor = noiseSuppression ? new RnNoiseSuppressor() : null; }
+            catch (Exception error) when (error is DllNotFoundException or BadImageFormatException or EntryPointNotFoundException)
+            { throw new IOException(UiText.Current["FilterLoadFailed"], error); }
+            try { processor = new(format.SampleRate, format.Channels, format.BitsPerSample,
+                format.Encoding == WaveFormatEncoding.IeeeFloat ? MicrophoneSampleEncoding.Float : MicrophoneSampleEncoding.Pcm, suppressor); }
+            catch { suppressor?.Dispose(); throw; }
+            capture.DataAvailable += OnData;
+            capture.RecordingStopped += OnStopped;
+            failed = false;
+            latest = new(-96, Environment.TickCount64, noiseSuppression ? 0 : null);
+            capture.StartRecording();
+        }
+        catch { Dispose(); throw; }
     }
 
     private void OnData(object? sender, WaveInEventArgs e)
     {
-        if (sender is not WasapiCapture source) return;
-        var format = source.WaveFormat;
-        int width = format.BitsPerSample / 8;
-        int count = e.BytesRecorded / width;
-        double sum = 0;
-        for (int index = 0; index + width <= e.BytesRecorded; index += width)
+        Exception? failure = null;
+        lock (sync)
         {
-            double value;
-            if (format.Encoding == WaveFormatEncoding.IeeeFloat) value = BitConverter.ToSingle(e.Buffer, index);
-            else if (width == 2) value = BitConverter.ToInt16(e.Buffer, index) / 32768.0;
-            else if (width == 3)
+            if (sender != capture || processor == null || failed) return;
+            try
             {
-                int sample = e.Buffer[index] | e.Buffer[index + 1] << 8 | e.Buffer[index + 2] << 16;
-                sample = (sample << 8) >> 8;
-                value = sample / 8388608.0;
+                if (processor.Push(e.Buffer.AsSpan(0, e.BytesRecorded)) && processor.Latest is { } reading)
+                    Volatile.Write(ref latest, new(reading.Decibels, Environment.TickCount64, reading.SpeechProbability));
             }
-            else value = BitConverter.ToInt32(e.Buffer, index) / 2147483648.0;
-            if (double.IsFinite(value)) sum += value * value;
+            catch (Exception error) { failed = true; failure = error; }
         }
-        double rms = count == 0 ? 0 : Math.Sqrt(sum / count);
-        Volatile.Write(ref latest, new(Math.Clamp(20 * Math.Log10(Math.Max(rms, 0.0000158489)), -96, 0), Environment.TickCount64));
-        // Buffers remain in memory only. No file writer or network access exists in this service.
+        if (failure != null) Failed?.Invoke(failure);
     }
     private void OnStopped(object? sender, StoppedEventArgs e)
     {
@@ -71,15 +77,22 @@ public sealed class AudioMonitorService : IDisposable
     }
     public void Dispose()
     {
-        if (capture != null)
+        WasapiCapture? previous;
+        lock (sync) { previous = capture; capture = null; }
+        try
         {
-            capture.DataAvailable -= OnData;
-            capture.RecordingStopped -= OnStopped;
-            capture.Dispose();
-            capture = null;
+            if (previous != null)
+            {
+                previous.DataAvailable -= OnData;
+                previous.RecordingStopped -= OnStopped;
+                // Capture disposal may join the audio thread; never hold sync here.
+                previous.Dispose();
+            }
         }
-        device?.Dispose();
-        device = null;
+        finally
+        {
+            lock (sync) { processor?.Dispose(); processor = null; }
+            device?.Dispose(); device = null;
+        }
     }
 }
-

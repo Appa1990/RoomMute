@@ -3,14 +3,9 @@
     <OutputType>WinExe</OutputType><TargetFramework>net8.0-windows</TargetFramework>
     <UseWPF>true</UseWPF><UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>disable</ImplicitUsings><AssemblyName>RoomMute</AssemblyName>
-    <ApplicationIcon>Resources\Icons\RoomMute.ico</ApplicationIcon><ApplicationManifest>app.manifest</ApplicationManifest><Version>1.5.0</Version>
+    <ApplicationIcon>Resources\Icons\RoomMute.ico</ApplicationIcon><ApplicationManifest>app.manifest</ApplicationManifest><Version>1.6.0</Version>
   </PropertyGroup>
   <ItemGroup><ProjectReference Include="../RoomMute.Core/RoomMute.Core.csproj"/><PackageReference Include="NAudio.Wasapi" Version="2.3.0"/></ItemGroup>
+  <PropertyGroup><NoiseRuntime Condition="'$(RuntimeIdentifier)' == ''">win-x64</NoiseRuntime><NoiseRuntime Condition="'$(RuntimeIdentifier)' != ''">$(RuntimeIdentifier)</NoiseRuntime></PropertyGroup>
+  <ItemGroup><Content Include="../native/$(NoiseRuntime)/rnnoise.dll" Link="rnnoise.dll" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest"/></ItemGroup>
 </Project>
-
-
-
-
-
-
-

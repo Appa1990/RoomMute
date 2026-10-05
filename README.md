@@ -1,12 +1,20 @@
-# RoomMute 1.5.0
+# RoomMute 1.6.0
 
 Local voice coordination for people sharing the same room.
 
 [Download for Windows](https://github.com/Appa1990/RoomMute/releases/latest) · [Homepage](https://lmnt-gaming.net/roommute.php) · [Issues](https://github.com/Appa1990/RoomMute/issues) · [Contributing](CONTRIBUTING.md)
 
-RoomMute is open source under the [MIT license](LICENSE). NAudio's license is included in [THIRD-PARTY-NOTICES.txt](THIRD-PARTY-NOTICES.txt).
+RoomMute is open source under the [MIT license](LICENSE). NAudio and RNNoise licenses are included in [THIRD-PARTY-NOTICES.txt](THIRD-PARTY-NOTICES.txt).
 
 Windows-Desktop-Anwendung (.NET 8 / WPF) für zwei PCs im selben Raum. Der lokale Mikrofonpegel steuert die Sprechkoordination. Über UDP werden ausschließlich Statusdaten gesendet; keine Audiodaten werden gespeichert, übertragen oder transkribiert.
+
+## Neu in 1.6.0
+
+- **Lokaler KI-Geräuschfilter für die Erkennung:** RNNoise 0.2 reduziert Rauschen und bewertet, ob Sprache enthalten ist. Standardmäßig eingeschaltet; im Mikrofonbereich über KI-Geräuschfilter deaktivierbar. Änderungen mit Übernehmen aktivieren. Nur der interne Erkennungspfad wird verarbeitet. Discord/Teamspeak erhalten weiterhin das Originalmikrofon mit ihren eigenen Filtern; RoomMute installiert kein virtuelles Gerät.
+- **Sprachsicherheit:** 20–95 %, Standard 60 %. Höhere Werte verlangen stärkere Hinweise auf Sprache und können Fehlstarts durch Atem-/Vape-Geräusche reduzieren; leise Sprache kann später erkannt werden. Während eines bestehenden Sprechturns gilt eine um 20 Prozentpunkte niedrigere Grenze, mindestens 10 %, damit kurze Pausen/Frikative nicht sofort freigeben. Lautstärkeschwellen sowie Attack und Release gelten weiterhin.
+- Bei aktivem Filter zeigt die Mikrofonbar den gefilterten dBFS-Pegel. Nach dem Upgrade die Schwellen erneut prüfen. Ausschalten bringt die bisherige reine Pegelerkennung zurück. Der gehaltene Trotzdem-sprechen-Shortcut bleibt ein bewusster Override; manuelles Mute bleibt erhalten.
+- Verarbeitung lokal auf der CPU mit eingebettetem Modell, ohne Cloud, GPU-Pflicht, Audioaufzeichnung oder Audioübertragung. Paket vollständig entpacken, einschließlich rnnoise.dll. Ein fehlender/unpassender Filter stoppt den Start mit einer Meldung, statt still ungeschützt weiterzulaufen; Filter kann ausgeschaltet werden.
+- Der Filter unterscheidet Sprache von Geräuschen, aber nicht dich von anderen sprechenden Menschen. Vape-Geräusche können abhängig vom Mikrofon weiterhin durchkommen; keine garantierte Vape-Erkennung. Ein realer Test mit deinem Mikrofon bleibt erforderlich.
 
 ## Neu in 1.5.0
 
@@ -70,7 +78,7 @@ Beim Aufnehmen wird der alte globale Shortcut vorübergehend freigegeben. Abbrec
 6. Ducking-Restpegel und Schwellwerte einstellen, **Änderungen übernehmen**, für den automatischen Betrieb **Mit Windows starten** aktivieren. Beim nächsten Öffnen startet die Verbindung selbstständig; beim ersten Einrichten bei Bedarf **Starten** drücken.
 7. Einzeln und gleichzeitig sprechen und die verbleibende Übertragung in der Voice-Anwendung prüfen.
 
-Vorhandene Einstellungen bleiben unter `%LocalAppData%\RoomMute\config.json` erhalten. Ältere Konfigurationen ohne Ducking-Einstellung erhalten automatisch 20 %. Die persönliche config.json nicht zwischen PCs kopieren: jeder PC braucht seine eigene Client-ID. Alte Konfigurationen ohne Shortcut erhalten F8. Beide PCs sollten auf 1.5 aktualisiert werden; ältere Versionen muten weiterhin vollständig.
+Vorhandene Einstellungen bleiben unter `%LocalAppData%\RoomMute\config.json` erhalten. Ältere Konfigurationen ohne Ducking-Einstellung erhalten automatisch 20 %. Die persönliche config.json nicht zwischen PCs kopieren: jeder PC braucht seine eigene Client-ID. Alte Konfigurationen ohne Shortcut erhalten F8. Beide PCs sollten auf 1.6 aktualisiert werden; ältere Versionen muten weiterhin vollständig.
 
 Für einen lokalen Pegeltest die Partner-IP leer lassen. Es wird dann keine Netzwerkverbindung oder automatische Absenkung aktiviert.
 
@@ -85,7 +93,7 @@ Für einen lokalen Pegeltest die Partner-IP leer lassen. Es wird dann keine Netz
 
 ## Erkennung und Netzwerk
 
-RMS/dBFS aus WASAPI-Daten im Shared Mode; ausschließlich Pegelauswertung. Standardwerte: Sprechschwelle −35 dBFS, Ruheschwelle −42 dBFS, Attack 40 ms, Release 350 ms.
+WASAPI im Shared Mode; optionaler lokaler RNNoise-Filter und Sprachwahrscheinlichkeit vor RMS/dBFS-Auswertung. PCM 16/24/32 Bit und Float32 werden zu Mono umgerechnet und für die Erkennung auf 48 kHz interpoliert. Die Verarbeitung nutzt 480-Sample-Blöcke (10 ms); Zustände bleiben über Paketgrenzen erhalten. Standardwerte: Sprechschwelle −35 dBFS, Ruheschwelle −42 dBFS, Attack 40 ms, Release 350 ms.
 
 Release stabilisiert die Ruhe-Erkennung und verzögert zusätzlich die Freigabe nach empfangenem Silent. Mit Standardwerten kann die Freigabe ungefähr 700 ms plus Netzwerklatenz nach Sprechende erfolgen.
 
@@ -137,11 +145,3 @@ NAudio.Wasapi und NAudio.Core 2.3.0, MIT-Lizenz, netstandard2.0-kompatibler Zwei
 - [NAudio 2.x](https://github.com/naudio/NAudio/tree/release/2.x)
 
 Nicht enthalten: Autodiscovery, Gruppen, Pairing, Installer oder automatische Updates. Der echte Zwei-PC-Test mit euren Mikrofonen ist zusätzlich zu den automatisierten Prüfungen erforderlich.
-
-
-
-
-
-
-
-

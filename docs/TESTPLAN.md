@@ -67,3 +67,16 @@ Automatisiert geprüft: 67 Logik-/Netzwerktests, nativer Hotkey-Lebenszyklus ohn
 - Änderungen vor Updatewechsel übernehmen. Bei Restorefehler kein Wechsel; Wiederherstellungsdatei für späteren Versuch behalten.
 
 Automatisiert: persistierte Neustart-Recovery, externe Änderungen, manuelles Mute, fehlgeschlagene Writes, Treiberrundung, Update-Metadaten, SHA-256, Größenprüfung, Abbruch und erneute Installationsprüfung. Ein echtes Herunterfahren sowie der Wechsel einer laufenden Hardware-Sitzung werden hier als manuelle Abnahme geprüft.
+
+## Geräuschfilter 1.6
+
+Automatisch geprüft: native RNNoise-DLL lädt und verarbeitet Stille/Rauschen, 16/24/32-Bit-PCM und Float32, Mehrkanal-Downmix, 8–192-kHz-Interpolation mit beliebig geteilten Paketen, Sprachwahrscheinlichkeit mit Attack/Release-Hysterese, Filter aus, alte Konfigurationen, Validierung und Lebenszyklus. Alle 75 Tests mit `dotnet run --project RoomMute.Tests -c Release`. Eine lokal per Windows-Sprachausgabe erzeugte PCM-Testdatei wird optional mit `--verify-detection-wave <wav>` geprüft; sie ist kein Ersatz für echte Mikrofonaufnahmen.
+
+- KI-Geräuschfilter aktivieren, Übernehmen. Normal sprechen und dabei Pegel/Status beobachten. Dann nur an der Vape ziehen, atmen, Tastatur benutzen: der Partner soll möglichst nicht als Folge dieser Geräusche abgesenkt werden.
+- Bei Fehlstarts Sprachsicherheit schrittweise von 60 auf 70/80 % erhöhen und übernehmen. Bei fehlenden leisen Worten verringern. Danach normale/leise Sprache, Zischlaute und Sprechpausen erneut prüfen.
+- Filter ausschalten und übernehmen: bisherige Pegelerkennung und ungefilterte Mikrofonbar kehren zurück. Filterstatus/Sprachsicherheit bleiben über Neustart und Sprachwechsel gespeichert; Entwürfe brauchen Übernehmen.
+- Discord/Teamspeak vor/nach dem Einschalten vergleichen: Filter verändert deren Audio nicht und erzeugt kein virtuelles Mikrofon. Ducking wirkt weiterhin auf den Windows-Eingang.
+- Push-to-talk während Filter-Stille halten: bewusste Freigabe funktioniert. Manuelles Mute bleibt erhalten. Stop, Gerätewechsel, fehlende DLL und Abziehen des Mikrofons müssen kontrolliert wiederherstellen/stoppen.
+- Task-Manager während normaler Sprache/Vape und bei Stop prüfen. Der Testrechner verarbeitete 3 s künstliches Rauschen in ca. 0,28 s; das ist kein allgemeiner CPU-Prozentwert.
+
+Echte Vape-Geräusche, reale Mikrofon-Sprachqualität und Dauerlast auf beiden Nutzer-PCs wurden nicht automatisch geprüft.

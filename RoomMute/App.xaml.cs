@@ -4,6 +4,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using RoomMute.Services;
+using RoomMute.Core.Audio;
 using RoomMute.ViewModels;
 using RoomMute.Views;
 namespace RoomMute;
@@ -26,6 +27,24 @@ public partial class App : Application
                 if (previous.ProcessName == "RoomMute" && !previous.WaitForExit(15000)) { Shutdown(1); return; }
             }
             catch (Exception error) when (error is ArgumentException or InvalidOperationException) { } // The old process already exited.
+        }
+        if (e.Args.Length == 2 && e.Args[0] == "--verify-noise-filter")
+        {
+            try
+            {
+                using var filter = new RnNoiseSuppressor();
+                var output = new float[480];
+                for (int i = 0; i < 30; i++)
+                {
+                    float probability = filter.Process(new float[480], output);
+                    if (!float.IsFinite(probability) || probability is < 0 or > 1 || output.Any(value => !float.IsFinite(value)))
+                        throw new InvalidDataException("Invalid native filter output.");
+                }
+                File.WriteAllText(e.Args[1], "PASS Bundled RNNoise loads and processes silence without opening a microphone.");
+                Shutdown();
+            }
+            catch (Exception error) { File.WriteAllText(e.Args[1], "FAIL " + error); Shutdown(1); }
+            return;
         }
         UiText.Current.Language = new ConfigurationService(log).Load().Language;
         if (e.Args.Length == 2 && e.Args[0] == "--verify-shortcut")
@@ -112,7 +131,7 @@ public partial class App : Application
             window.Dispatcher.Invoke(() => { }, DispatcherPriority.ApplicationIdle);
             window.UpdateLayout();
             var root = (DashboardView)window.Content;
-            foreach (FrameworkElement control in new FrameworkElement[] { root.AudioActions, root.ShortcutSettings, root.VolumeControls, root.UpdateButton, root.ApplyButton, root.NetworkCard })
+            foreach (FrameworkElement control in new FrameworkElement[] { root.AudioActions, root.ShortcutSettings, root.VolumeControls, root.NoiseFilterSettings, root.UpdateButton, root.ApplyButton, root.NetworkCard })
             {
                 var bounds = control.TransformToAncestor(root).TransformBounds(new Rect(0, 0, control.ActualWidth, control.ActualHeight));
                 if (bounds.Left < 0 || bounds.Top < 0 || bounds.Right > root.ActualWidth + 1 || bounds.Bottom > root.ActualHeight + 1)
@@ -120,7 +139,7 @@ public partial class App : Application
             }
             if (root.AudioActions.TransformToAncestor(root).Transform(new Point(0, root.AudioActions.ActualHeight)).Y >
                 root.AudioCard.TransformToAncestor(root).Transform(new Point(0, root.AudioCard.ActualHeight)).Y)
-                throw new InvalidOperationException("Audio controls overflow their card.");
+                throw new InvalidOperationException($"Audio controls overflow their card: actions bottom {root.AudioActions.TransformToAncestor(root).Transform(new Point(0, root.AudioActions.ActualHeight)).Y}, card bottom {root.AudioCard.TransformToAncestor(root).Transform(new Point(0, root.AudioCard.ActualHeight)).Y}.");
             if (root.ShortcutSettings.TransformToAncestor(root).Transform(new Point(0, root.ShortcutSettings.ActualHeight)).Y >
                 root.AudioActions.TransformToAncestor(root).Transform(new Point(0, 0)).Y)
                 throw new InvalidOperationException("Shortcut overlaps audio actions.");
@@ -173,14 +192,3 @@ public partial class App : Application
         base.OnExit(e);
     }
 }
-
-
-
-
-
-
-
-
-
-
-

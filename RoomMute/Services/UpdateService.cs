@@ -69,5 +69,3 @@ public sealed class UpdateService : IDisposable
     }
     public void Dispose() => http.Dispose();
 }
-
-

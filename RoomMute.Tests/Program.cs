@@ -6,6 +6,7 @@ if (args.Length == 2 && args[0] == "--verify-release")
     await RoomMute.Tests.UpdateIntegration.VerifyRealRelease(args[1]);
     return;
 }
+if (args.Length == 2 && args[0] == "--verify-detection-wave") { RoomMute.Tests.DetectionWaveTest.Run(args[1]); return; }
 int passed = 0;
 void Check(string name, Action test)
 {
@@ -603,6 +604,7 @@ try
 catch (Exception ex) { Console.Error.WriteLine("FAIL Late partner integration: " + ex); Environment.Exit(1); }
 try { await RoomMute.Tests.UpdateIntegration.Run(); passed++; Console.WriteLine("PASS Verified update download, corruption rejection, cancellation and install re-verification"); }
 catch (Exception error) { Console.Error.WriteLine("FAIL Update integration: " + error); Environment.Exit(1); }
+passed += RoomMute.Tests.NoiseFilterTests.Run();
 Console.WriteLine($"{passed} tests passed.");
 
 sealed class FakeMicrophone : IMicrophone
@@ -634,4 +636,3 @@ sealed class RecoveryFixture : IDisposable
         (original, applied) => Journal.Save("test-device", original, applied), () => Journal.Clear("test-device"));
     public void Dispose() { if (System.IO.Directory.Exists(Directory)) System.IO.Directory.Delete(Directory,true); }
 }
-

@@ -9,6 +9,7 @@ public sealed class SettingsViewModel : ObservableObject
         original = config.Copy();
         PushToTalkKey = config.PushToTalkKey;
         DuckPercent = config.DuckPercent;
+        NoiseSuppression = config.NoiseSuppression; SpeechConfidence = config.SpeechConfidence;
         ClientName = config.ClientName; PartnerIp = config.PartnerIp; Port = config.Port.ToString();
         Priority = config.Priority.ToString(); AudioDeviceId = config.AudioDeviceId;
         SpeakThreshold = config.SpeakThreshold; SilenceThreshold = config.SilenceThreshold;
@@ -30,6 +31,10 @@ public sealed class SettingsViewModel : ObservableObject
     public string Priority { get => priority; set => Set(ref priority, value); }
     private string audioDeviceId = "";
     public string AudioDeviceId { get => audioDeviceId; set => Set(ref audioDeviceId, value); }
+    private bool noiseSuppression;
+    public bool NoiseSuppression { get => noiseSuppression; set => Set(ref noiseSuppression, value); }
+    private double speechConfidence;
+    public double SpeechConfidence { get => speechConfidence; set => Set(ref speechConfidence, value); }
     private double duckPercent;
     public double DuckPercent { get => duckPercent; set => Set(ref duckPercent, value); }
     private double speakThreshold;
@@ -54,6 +59,7 @@ public sealed class SettingsViewModel : ObservableObject
         result.PushToTalkKey = PushToTalkKey;
         result.Language = UiText.Current.Language;
         result.DuckPercent = DuckPercent;
+        result.NoiseSuppression = NoiseSuppression; result.SpeechConfidence = SpeechConfidence;
         result.ClientName = ClientName.Trim(); result.PartnerIp = PartnerIp.Trim();
         result.AudioDeviceId = AudioDeviceId ?? "";
         result.Port = Number(Port, "Port"); result.Priority = Number(Priority, UiText.Current["Priority"]);
@@ -69,9 +75,3 @@ public sealed class SettingsViewModel : ObservableObject
         int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var result)
         ? result : throw new InvalidDataException(UiText.Current.Format("InvalidNumber", name));
 }
-
-
-
-
-
-

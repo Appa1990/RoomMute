@@ -3,11 +3,11 @@
  xmlns:controls="clr-namespace:RoomMute.Views">
 <UserControl.Resources>
  <Style x:Key="Field" TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
-  <Setter Property="Margin" Value="0,4,0,0"/><Setter Property="Padding" Value="8,5"/><Setter Property="FontSize" Value="13"/>
+  <Setter Property="Margin" Value="0,4,0,0"/><Setter Property="Padding" Value="8,3"/><Setter Property="FontSize" Value="13"/>
  </Style>
  <Style x:Key="Label" TargetType="TextBlock" BasedOn="{StaticResource MutedText}"><Setter Property="FontSize" Value="12"/></Style>
  <Style x:Key="CompactSlider" TargetType="Slider" BasedOn="{StaticResource {x:Type Slider}}">
-  <Setter Property="Height" Value="23"/><Setter Property="Margin" Value="0,4,0,0"/>
+  <Setter Property="Height" Value="20"/><Setter Property="Margin" Value="0,4,0,0"/>
  </Style>
  <Style x:Key="CompactCheck" TargetType="CheckBox" BasedOn="{StaticResource {x:Type CheckBox}}">
   <Setter Property="Margin" Value="0"/><Setter Property="FontSize" Value="12"/><Setter Property="VerticalAlignment" Value="Center"/>
@@ -53,14 +53,16 @@
   <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="14"/><ColumnDefinition Width="350"/></Grid.ColumnDefinitions>
   <Border x:Name="AudioCard" Style="{StaticResource Card}" Padding="16,12">
    <Grid><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
-    <TextBlock Text="{Binding Text[Local]}" Style="{StaticResource Eyebrow}" Margin="0,0,0,7"/>
+    <Grid Margin="0,0,0,5"><TextBlock Text="{Binding Text[Local]}" Style="{StaticResource Eyebrow}"/>
+ <CheckBox HorizontalAlignment="Right" Content="{Binding Text[NoiseFilter]}" IsChecked="{Binding Settings.NoiseSuppression}" Style="{StaticResource CompactCheck}" ToolTip="{Binding Text[NoiseFilterTip]}" ToolTipService.ShowDuration="30000"/>
+</Grid>
     <Grid Grid.Row="1"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
      <ComboBox ItemsSource="{Binding Devices}" DisplayMemberPath="Name" SelectedValuePath="Id" SelectedValue="{Binding Settings.AudioDeviceId, Mode=TwoWay}" Margin="0,0,7,0" AutomationProperties.Name="{Binding Text[Local]}"/>
      <Button Grid.Column="1" Content="↻" Command="{Binding RefreshCommand}" ToolTipService.ShowDuration="30000" ToolTip="{Binding Text[RefreshDevices]}" AutomationProperties.Name="{Binding Text[RefreshDevices]}" Style="{StaticResource SmallButton}"/>
     </Grid>
     <StackPanel Grid.Row="2" Margin="0,6,0,0">
      <Grid><TextBlock Text="{Binding LocalState}" Foreground="{Binding LocalBrush}" FontSize="12" FontWeight="SemiBold"/><TextBlock Text="{Binding LevelText}" HorizontalAlignment="Right" FontFamily="Consolas" FontSize="13"/></Grid>
-     <controls:LevelMeter Level="{Binding Level}" Threshold="{Binding Settings.SpeakThreshold}" SilenceThreshold="{Binding Settings.SilenceThreshold}" Height="34" Margin="0,4,0,0" AutomationProperties.Name="{Binding Text[Local]}"/>
+     <controls:LevelMeter Level="{Binding Level}" Threshold="{Binding Settings.SpeakThreshold}" SilenceThreshold="{Binding Settings.SilenceThreshold}" Height="28" Margin="0,4,0,0" AutomationProperties.Name="{Binding Text[Local]}"/>
      <Grid Margin="0,-1,0,0"><TextBlock Text="−96 dBFS" FontSize="10" Foreground="{StaticResource MutedBrush}"/><TextBlock Text="0 dBFS" HorizontalAlignment="Right" FontSize="10" Foreground="{StaticResource MutedBrush}"/></Grid>
     </StackPanel>
 
@@ -103,9 +105,17 @@
   <StackPanel Orientation="Horizontal"><TextBlock Text="{Binding Text[RecordShortcut]}" FontSize="11" Margin="0,0,10,0"/><TextBlock Text="{Binding Settings.ShortcutLabel}" FontWeight="SemiBold" MaxWidth="170" TextTrimming="CharacterEllipsis"/></StackPanel>
  </Button>
 </Grid>
-<StackPanel x:Name="AudioActions" Grid.Row="7" VerticalAlignment="Top" Orientation="Horizontal" Margin="0,10,0,0">
+<StackPanel Grid.Row="7" VerticalAlignment="Top">
+ <Grid x:Name="NoiseFilterSettings" Margin="0,6,0,0" IsEnabled="{Binding Settings.NoiseSuppression}" ToolTip="{Binding Text[ConfidenceTip]}" ToolTipService.ShowDuration="30000">
+  <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="50"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+  <TextBlock Text="{Binding Text[SpeechConfidence]}" Style="{StaticResource Label}" VerticalAlignment="Center"/>
+  <TextBlock Grid.Column="1" Text="{Binding Settings.SpeechConfidence, StringFormat={}{0:0} %}" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="12" Foreground="{StaticResource AccentBrush}"/>
+  <Slider Grid.Column="2" Style="{StaticResource CompactSlider}" Margin="0" Minimum="20" Maximum="95" TickFrequency="1" IsSnapToTickEnabled="True" Value="{Binding Settings.SpeechConfidence}" AutomationProperties.Name="{Binding Text[SpeechConfidence]}"/>
+ </Grid>
+ <StackPanel x:Name="AudioActions" VerticalAlignment="Top" Orientation="Horizontal" Margin="0,5,0,0">
      <Button Content="{Binding Text[Mute]}" Command="{Binding MuteCommand}" Style="{StaticResource SmallButton}" Margin="0,0,8,0"/>
      <Button Content="{Binding Text[Restore]}" Command="{Binding RestoreCommand}" Style="{StaticResource SmallButton}"/>
+    </StackPanel>
     </StackPanel>
    </Grid>
   </Border>
@@ -161,10 +171,3 @@
  </Grid>
 </Grid>
 </UserControl>
-
-
-
-
-
-
-
