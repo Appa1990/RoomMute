@@ -7,3 +7,5 @@
 
 *.dll binary
 native/rnnoise/** text eol=lf -whitespace
+*.onnx binary
+THIRD-PARTY-NOTICES.txt -whitespace

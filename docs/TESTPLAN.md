@@ -80,3 +80,11 @@ Automatisch geprüft: native RNNoise-DLL lädt und verarbeitet Stille/Rauschen, 
 - Task-Manager während normaler Sprache/Vape und bei Stop prüfen. Der Testrechner verarbeitete 3 s künstliches Rauschen in ca. 0,28 s; das ist kein allgemeiner CPU-Prozentwert.
 
 Echte Vape-Geräusche, reale Mikrofon-Sprachqualität und Dauerlast auf beiden Nutzer-PCs wurden nicht automatisch geprüft.
+
+## Sprachfilter 1.7
+
+79 automatisierte Tests: zusätzlich jedes 10-ms-Ergebnis statt punktueller UI-Samples, Regression für isolierte Konfidenzspitzen, Modus-Migration/Validierung, Silero-Initialisierung/Zustand/Entsorgung und Modellintegrität. Paketdiagnose --verify-noise-filter lädt beide Modelle, ohne ein Mikrofon zu öffnen.
+
+Private Vape-Probe (nicht im Repo): --verify-noise-wave <PCM16.wav> prüft beide Modi bei -35/-42 und -25/-32 dBFS, 60 % Sprachsicherheit und 1-/2-/4-/8-fachem Eingangspegel. Strenger: keine Sprechstarts, maximale Bewertung 3,7–7,2 %. RNNoise: bis 100 % Bewertung, Fehlstarts bei höheren Pegeln. Erzeugte Sprachsätze zusätzlich über --verify-detection-wave prüfen. Diese Tests sagen nichts über jedes andere Geräusch oder die tatsächliche Mikrofonverarbeitung auf beiden PCs aus.
+
+Hardware: Strenger auswählen, übernehmen, nur vapen/atmen, dann normale und leise Worte sowie S/Z-Anfänge sprechen. Live-KI-Wert mit Sprachsicherheit vergleichen. Standard und Filter aus zur Kontrolle verwenden. Stimme des Partners kann auch als Sprache erkannt werden; das Modell identifiziert keine Personen. Shortcut, manuelles Mute, Stop/Neustart und längere Laufzeit erneut am realen Gerät prüfen.

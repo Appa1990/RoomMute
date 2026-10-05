@@ -10,6 +10,13 @@ public sealed class UiText : INotifyPropertyChanged
     private static readonly IReadOnlyDictionary<string, (string De, string En)> Strings =
         new Dictionary<string, (string De, string En)>
     {
+        ["LiveConfidence"] = ("KI: {0:0} %", "AI: {0:0}%"),
+        ["LiveConfidenceTip"] = ("Aktuelle Sprachbewertung des Filters. Hohe Werte auch beim Vapen bedeuten, dass die aktiven Modelle das Geräusch für Sprache halten. Dies ist eine Modellbewertung, keine garantierte Wahrscheinlichkeit.", "Current filter speech score. High values while vaping mean the active models classify the noise as speech. This is a model score, not a guaranteed probability."),
+        ["DetectionBacklog"] = ("Sprecherkennung verzögert. Überwachung wird zur Sicherheit neu gestartet.", "Speech detection fell behind. Monitoring will restart safely."),
+        ["FilterStandard"] = ("Standard", "Standard"),
+        ["FilterStrict"] = ("Strenger", "Stricter"),
+        ["FilterModeInvalid"] = ("Ungültiger Geräuschfilter-Modus.", "Invalid noise filter mode."),
+        ["FilterModeTip"] = ("Standard: RNNoise. Strenger: Zusätzlich prüft Silero VAD das Originalsignal auf Sprache; zwei aufeinanderfolgende 32-ms-Fenster müssen passen. Lokal auf der CPU. Kann Fehlstarts verringern, aber leise/kurze Worte später erkennen. Mit Übernehmen aktivieren.", "Standard: RNNoise. Stricter: Silero VAD also checks the original signal for speech; two consecutive 32 ms windows must agree. Runs locally on CPU. Can reduce false starts but may detect quiet/short words later. Activate with Apply changes."),
         ["NoiseFilter"] = ("KI-Geräuschfilter", "AI noise filter"),
         ["NoiseFilterTip"] = ("RNNoise filtert nur RoomMutes Erkennung. Der Pegelbalken zeigt das gefilterte Signal. Sprache muss zusätzlich die eingestellte Sprachsicherheit erreichen. Keine Cloud, keine Aufzeichnung, keine Änderung am Audio für Discord/Teamspeak. Mit Übernehmen aktivieren.", "RNNoise filters RoomMute detection only. The meter shows the filtered signal. Speech must also reach the selected speech confidence. No cloud, no recording, no change to Discord/Teamspeak audio. Activate with Apply changes."),
         ["SpeechConfidence"] = ("Sprachsicherheit", "Speech confidence"),

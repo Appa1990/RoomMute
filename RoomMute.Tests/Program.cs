@@ -7,6 +7,7 @@ if (args.Length == 2 && args[0] == "--verify-release")
     return;
 }
 if (args.Length == 2 && args[0] == "--verify-detection-wave") { RoomMute.Tests.DetectionWaveTest.Run(args[1]); return; }
+if (args.Length == 2 && args[0] == "--verify-noise-wave") { RoomMute.Tests.DetectionWaveTest.Run(args[1], false); return; }
 int passed = 0;
 void Check(string name, Action test)
 {

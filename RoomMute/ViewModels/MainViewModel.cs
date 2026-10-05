@@ -32,6 +32,9 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     private bool running;
     private bool enabled;
     private double level = -96;
+    private double? liveSpeechProbability;
+    public string LiveSpeechConfidenceText => running && config.NoiseSuppression && liveSpeechProbability is { } probability
+        ? Text.Format("LiveConfidence", probability * 100) : "";
     private string notice = "Mikrofon wählen und die IP des Partner-PCs eintragen.";
     private string partnerName = "Noch kein Partner";
     private string microphoneName = "Kein Mikrofon ausgewählt";
@@ -45,6 +48,8 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     public bool MinimizeToTray => config.MinimizeToTray;
     public bool StartMinimized => config.StartMinimized;
     public UiText Text => UiText.Current;
+    private IReadOnlyList<LanguageChoice>? noiseModes;
+    public IReadOnlyList<LanguageChoice> NoiseModes => noiseModes ??= new[] { new LanguageChoice("rnnoise", Text["FilterStandard"]), new LanguageChoice("speech", Text["FilterStrict"]) };
     public IReadOnlyList<LanguageChoice> Languages { get; } = new[] { new LanguageChoice("de", "Deutsch"), new LanguageChoice("en", "English") };
     public string Language
     {
@@ -160,7 +165,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     }
     private void LanguageChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(UiText.Language)) { Settings.NotifyLanguageChanged(); Changed(""); }
+        if (e.PropertyName == nameof(UiText.Language)) { noiseModes = null; Settings.NotifyLanguageChanged(); Changed(""); }
     }
     private void NetworkAddressesChanged(object? sender, EventArgs e) =>
         dispatcher.BeginInvoke(new Action(() => { if (!disposed) RefreshNetwork(); }));
@@ -317,7 +322,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
                 if (generation == currentGeneration && running) Fail(error);
             }));
             audio.Failed += audioErrorHandler;
-            audio.Start(config.AudioDeviceId, config.NoiseSuppression);
+            audio.Start(config.AudioDeviceId, config.NoiseSuppression, config.NoiseFilterMode);
             if (!string.IsNullOrWhiteSpace(config.PartnerIp))
             {
             var current = new NetworkService(config);
@@ -362,14 +367,24 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         var reading = audio.Latest;
         if (now - reading.ReceivedAt > 2000) throw new IOException("Das Mikrofon liefert keine Daten mehr. Gerät prüfen und neu starten.");
         level = reading.Decibels;
+        liveSpeechProbability = reading.SpeechProbability;
         actualMuted = microphone.Muted;
         bool changed;
         if (actualMuted)
         {
             changed = detector.Speaking;
             detector.Reset();
+            audio.DrainReadings();
         }
-        else changed = detector.Update(level, now, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), config, reading.SpeechProbability);
+        else
+        {
+            // UI/network ticks must not reuse a single frame to satisfy the attack timer.
+            bool before = detector.Speaking;
+            long utcNow = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            foreach (var frame in audio.DrainReadings())
+                detector.Update(frame.Decibels, frame.ReceivedAt, utcNow - (now - frame.ReceivedAt), config, frame.SpeechProbability);
+            changed = before != detector.Speaking;
+        }
         if (changed)
         {
             log.Write(detector.Speaking ? "Local speaking started" : "Local speaking stopped");

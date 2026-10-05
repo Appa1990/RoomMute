@@ -22,6 +22,7 @@ public sealed class DetectionAudioProcessor : IDisposable
     private double nextOutputPosition;
     private float previous;
     private bool disposed;
+    public event Action<DetectionReading>? ReadingAvailable;
     public DetectionReading? Latest { get; private set; }
     public long ProcessedFrames { get; private set; }
 
@@ -80,11 +81,12 @@ public sealed class DetectionAudioProcessor : IDisposable
                     }
                     Latest = new(Decibels(energy, output.Length), Math.Clamp(probability, 0, 1));
                     ProcessedFrames++; frameCount = 0; updated = true;
+                    ReadingAvailable?.Invoke(Latest);
                 }
             }
             previous = current; sampleIndex++;
         }
-        if (suppressor == null && rawCount > 0) { Latest = new(Decibels(rawEnergy, rawCount), null); updated = true; }
+        if (suppressor == null && rawCount > 0) { Latest = new(Decibels(rawEnergy, rawCount), null); updated = true; ReadingAvailable?.Invoke(Latest); }
         return updated;
     }
     private static double Decibels(double energy, int count) => Math.Clamp(20 * Math.Log10(Math.Max(Math.Sqrt(energy / count), 0.0000158489)), -96, 0);

@@ -1,12 +1,20 @@
-# RoomMute 1.6.0
+# RoomMute 1.7.0
 
 Local voice coordination for people sharing the same room.
 
 [Download for Windows](https://github.com/Appa1990/RoomMute/releases/latest) · [Homepage](https://lmnt-gaming.net/roommute.php) · [Issues](https://github.com/Appa1990/RoomMute/issues) · [Contributing](CONTRIBUTING.md)
 
-RoomMute is open source under the [MIT license](LICENSE). NAudio and RNNoise licenses are included in [THIRD-PARTY-NOTICES.txt](THIRD-PARTY-NOTICES.txt).
+RoomMute is open source under the [MIT license](LICENSE). NAudio, RNNoise, Silero and ONNX Runtime licenses are included in [THIRD-PARTY-NOTICES.txt](THIRD-PARTY-NOTICES.txt).
 
 Windows-Desktop-Anwendung (.NET 8 / WPF) für zwei PCs im selben Raum. Der lokale Mikrofonpegel steuert die Sprechkoordination. Über UDP werden ausschließlich Statusdaten gesendet; keine Audiodaten werden gespeichert, übertragen oder transkribiert.
+
+## Neu in 1.7.0
+
+- **Strengerer Sprachfilter:** Zusätzlich zu RNNoise prüft Silero VAD das Originalsignal. Beide Modelle müssen Sprache bestätigen; Silero verlangt zwei aufeinanderfolgende 32-ms-Fenster. Der neue Modus Strenger ist voreingestellt, auch bei vorhandenen Einstellungen ohne Modus. Standard verwendet weiterhin RNNoise allein. Modus/Sprachsicherheit mit Übernehmen aktivieren.
+- **Jeder Audioabschnitt zählt:** Alle 10-ms-Ergebnisse werden chronologisch ausgewertet. Die 40-ms-UI-Aktualisierung und Netzwerkpakete dürfen nicht mehr durch wiederholtes Verwenden einzelner Spitzen einen Sprechbeginn erzeugen. Eine begrenzte Warteschlange stoppt bei Überlast die Überwachung kontrolliert.
+- **Live-KI-Anzeige:** Neben dem lokalen Status steht die aktuelle gemeinsame Sprachbewertung. Sie hilft, Geräusche, Schwellen und zu strenge Einstellungen zu unterscheiden. Modellwerte sind keine kalibrierten Wahrscheinlichkeiten.
+- Weiterhin lokale CPU-Verarbeitung mit eingebettetem Modell; kein virtuelles Mikrofon oder Audio-Upload. RNNoise-DLL, ONNX-Laufzeit und Models-Ordner vollständig entpacken. CPU-/Speicherbedarf und Paketgröße steigen durch die zusätzliche Prüfung. Bei zu spät erkannter leiser/kurzer Sprache Sprachsicherheit verringern oder Standard auswählen. Sprechbeginn wird um die zusätzlichen Modellfenster verzögert; der Ton in Discord/Teamspeak wird nicht verzögert oder verarbeitet.
+- Eine privat bereitgestellte Vape-Probe wurde lokal bei originalem und 2-/4-/8-fachem Eingangspegel geprüft: Strenger erzeugt keine Sprechstarts bei -35/-42 oder -25/-32 dBFS und 60 % Sprachsicherheit. Maximale gemeinsame Bewertung 3,7–7,2 %. RNNoise allein erreicht zeitweise 100 % und erzeugt bei höheren Pegeln Fehlstarts. Diese einzelne Probe beweist keine universelle Unterdrückung. Erzeugte Sprachsätze bleiben erkennbar. Die Aufnahme wird nicht veröffentlicht.
 
 ## Neu in 1.6.0
 

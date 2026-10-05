@@ -32,7 +32,7 @@ public partial class App : Application
         {
             try
             {
-                using var filter = new RnNoiseSuppressor();
+                using var filter = new SpeechVerifiedSuppressor();
                 var output = new float[480];
                 for (int i = 0; i < 30; i++)
                 {
@@ -40,7 +40,7 @@ public partial class App : Application
                     if (!float.IsFinite(probability) || probability is < 0 or > 1 || output.Any(value => !float.IsFinite(value)))
                         throw new InvalidDataException("Invalid native filter output.");
                 }
-                File.WriteAllText(e.Args[1], "PASS Bundled RNNoise loads and processes silence without opening a microphone.");
+                File.WriteAllText(e.Args[1], "PASS Bundled RNNoise and Silero load and process silence without opening a microphone.");
                 Shutdown();
             }
             catch (Exception error) { File.WriteAllText(e.Args[1], "FAIL " + error); Shutdown(1); }

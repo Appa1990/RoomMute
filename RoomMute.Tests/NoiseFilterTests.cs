@@ -108,7 +108,56 @@ public static class NoiseFilterTests
             Console.WriteLine($"  Native hiss: filtered {db:0.0} dBFS, confidence {confidence:P0}; 3 s processed in {watch.Elapsed.TotalMilliseconds:0} ms.");
             Assert(db < -35 && confidence < .3);
         });
+        Check("Every analysis frame reaches detection; UI sampling cannot turn isolated peaks into speech", () =>
+        {
+            using var processor = new DetectionAudioProcessor(48000, 1, 32, MicrophoneSampleEncoding.Float, new SpikyFilter());
+            var vad = new VoiceActivityDetector(); var sampled = new VoiceActivityDetector(); var config = new AppConfig();
+            int frame = 0;
+            processor.ReadingAvailable += reading =>
+            {
+                vad.Update(reading.Decibels, frame * 10L, 1000 + frame * 10L, config, reading.SpeechProbability);
+                if (frame % 4 == 3) sampled.Update(reading.Decibels, frame * 10L, 1000 + frame * 10L, config, reading.SpeechProbability);
+                frame++;
+            };
+            processor.Push(Floats(Enumerable.Repeat(.1f, 480 * 40).ToArray()));
+            Assert(frame == 40 && !vad.Speaking && sampled.Speaking);
+        });
+        Check("Stricter mode is the legacy default and invalid mode is rejected", () =>
+        {
+            Assert(JsonSerializer.Deserialize<AppConfig>("{}")!.NoiseFilterMode == "speech");
+            Assert(new AppConfig { NoiseFilterMode = "unknown" }.Validate(false) != null);
+            var config = new AppConfig { NoiseFilterMode = "rnnoise", NoiseSuppression = false };
+            Assert(JsonSerializer.Deserialize<AppConfig>(JsonSerializer.Serialize(config))!.NoiseFilterMode == "rnnoise");
+        });
+        Check("Bundled Silero classifier handles silence and repeated clean disposal", () =>
+        {
+            for (int i = 0; i < 3; i++)
+            {
+                using var strict = new SpeechVerifiedSuppressor(); var input = new float[480]; var output = new float[480];
+                for (int j = 0; j < 20; j++) Assert(strict.Process(input, output) < .1);
+                strict.Dispose(); strict.Dispose();
+                try { strict.Process(input, output); throw new Exception("Disposed classifier accepted samples."); }
+                catch (ObjectDisposedException) { }
+            }
+        });
+        Check("Changed speech model is rejected before inference", () =>
+        {
+            string path = Path.Combine(Path.GetTempPath(), "RoomMute-bad-model-" + Guid.NewGuid().ToString("N"));
+            try
+            {
+                File.WriteAllText(path, "changed model");
+                try { using var filter = new SpeechVerifiedSuppressor(path); throw new Exception("Tampered model accepted."); }
+                catch (InvalidDataException) { }
+            }
+            finally { File.Delete(path); }
+        });
         return passed;
+    }
+    private sealed class SpikyFilter : INoiseSuppressor
+    {
+        private int count;
+        public float Process(float[] input, float[] output) { Array.Copy(input, output, input.Length); return ++count % 4 == 0 ? .9f : .1f; }
+        public void Dispose() { }
     }
     private sealed class EchoFilter : INoiseSuppressor
     {

@@ -13,6 +13,13 @@ public sealed class AudioMonitorService : IDisposable
     private WasapiCapture? capture;
     private DetectionAudioProcessor? processor;
     private bool failed;
+    private readonly Queue<AudioReading> pending = new();
+    private readonly List<DetectionReading> packetReadings = new(4);
+    private long lastAnalysisAt;
+    public AudioReading[] DrainReadings()
+    {
+        lock (sync) { var result = pending.ToArray(); pending.Clear(); return result; }
+    }
     private AudioReading latest = new(-96, 0);
     public AudioReading Latest => Volatile.Read(ref latest);
     public event Action<Exception>? Failed;
@@ -28,7 +35,7 @@ public sealed class AudioMonitorService : IDisposable
         return result;
     }
 
-    public void Start(string deviceId, bool noiseSuppression = true)
+    public void Start(string deviceId, bool noiseSuppression = true, string filterMode = "speech")
     {
         Dispose();
         try
@@ -40,13 +47,15 @@ public sealed class AudioMonitorService : IDisposable
             bool supported = (format.Encoding == WaveFormatEncoding.IeeeFloat && format.BitsPerSample == 32) ||
                 (format.Encoding == WaveFormatEncoding.Pcm && format.BitsPerSample is 16 or 24 or 32);
             if (!supported) throw new NotSupportedException($"Nicht unterstütztes Mikrofonformat: {format}");
-                        RnNoiseSuppressor? suppressor;
-            try { suppressor = noiseSuppression ? new RnNoiseSuppressor() : null; }
+            INoiseSuppressor? suppressor;
+            try { suppressor = noiseSuppression ? filterMode == "speech" ? new SpeechVerifiedSuppressor() : new RnNoiseSuppressor() : null; }
             catch (Exception error) when (error is DllNotFoundException or BadImageFormatException or EntryPointNotFoundException)
             { throw new IOException(UiText.Current["FilterLoadFailed"], error); }
             try { processor = new(format.SampleRate, format.Channels, format.BitsPerSample,
                 format.Encoding == WaveFormatEncoding.IeeeFloat ? MicrophoneSampleEncoding.Float : MicrophoneSampleEncoding.Pcm, suppressor); }
             catch { suppressor?.Dispose(); throw; }
+            lastAnalysisAt = 0;
+            processor.ReadingAvailable += packetReadings.Add;
             capture.DataAvailable += OnData;
             capture.RecordingStopped += OnStopped;
             failed = false;
@@ -64,8 +73,19 @@ public sealed class AudioMonitorService : IDisposable
             if (sender != capture || processor == null || failed) return;
             try
             {
-                if (processor.Push(e.Buffer.AsSpan(0, e.BytesRecorded)) && processor.Latest is { } reading)
-                    Volatile.Write(ref latest, new(reading.Decibels, Environment.TickCount64, reading.SpeechProbability));
+                packetReadings.Clear();
+                processor.Push(e.Buffer.AsSpan(0, e.BytesRecorded));
+                long packetAt = Environment.TickCount64;
+                for (int i = 0; i < packetReadings.Count; i++)
+                {
+                    var frame = packetReadings[i];
+                    // Anchor each packet to receipt time, avoiding long-session audio-clock drift.
+                    long at = frame.SpeechProbability == null ? packetAt : packetAt - (packetReadings.Count - i - 1) * 10L;
+                    at = Math.Max(lastAnalysisAt + 1, at); lastAnalysisAt = at;
+                    var reading = new AudioReading(frame.Decibels, at, frame.SpeechProbability);
+                    if (pending.Count >= 512) throw new IOException(UiText.Current["DetectionBacklog"]);
+                    pending.Enqueue(reading); Volatile.Write(ref latest, reading);
+                }
             }
             catch (Exception error) { failed = true; failure = error; }
         }
@@ -91,7 +111,7 @@ public sealed class AudioMonitorService : IDisposable
         }
         finally
         {
-            lock (sync) { processor?.Dispose(); processor = null; }
+            lock (sync) { processor?.Dispose(); processor = null; pending.Clear(); packetReadings.Clear(); }
             device?.Dispose(); device = null;
         }
     }

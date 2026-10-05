@@ -3,7 +3,7 @@ $ErrorActionPreference = 'Stop'
 $projectRoot = $PSScriptRoot
 if ($Runtime -notin @('win-x64', 'win-arm64')) { throw 'Unterstützt: win-x64 oder win-arm64.' }
 if (!(Test-Path -LiteralPath (Join-Path $projectRoot "native/$Runtime/rnnoise.dll"))) { throw "Rebuild the native filter first: ./native/build.ps1 -Runtime $Runtime" }
-$packageName = "RoomMute-$Runtime-v1.6.0"
+$packageName = "RoomMute-$Runtime-v1.7.0"
 $outputDirectory = Join-Path $projectRoot "artifacts/$packageName"
 dotnet publish (Join-Path $projectRoot 'RoomMute/RoomMute.csproj') -c Release -r $Runtime --self-contained true -o $outputDirectory -p:PublishSingleFile=false
 if ($LASTEXITCODE -ne 0) { throw 'Publish fehlgeschlagen.' }

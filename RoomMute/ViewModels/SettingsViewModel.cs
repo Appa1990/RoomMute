@@ -9,6 +9,7 @@ public sealed class SettingsViewModel : ObservableObject
         original = config.Copy();
         PushToTalkKey = config.PushToTalkKey;
         DuckPercent = config.DuckPercent;
+        NoiseFilterMode = config.NoiseFilterMode;
         NoiseSuppression = config.NoiseSuppression; SpeechConfidence = config.SpeechConfidence;
         ClientName = config.ClientName; PartnerIp = config.PartnerIp; Port = config.Port.ToString();
         Priority = config.Priority.ToString(); AudioDeviceId = config.AudioDeviceId;
@@ -31,6 +32,8 @@ public sealed class SettingsViewModel : ObservableObject
     public string Priority { get => priority; set => Set(ref priority, value); }
     private string audioDeviceId = "";
     public string AudioDeviceId { get => audioDeviceId; set => Set(ref audioDeviceId, value); }
+    private string noiseFilterMode = "speech";
+    public string NoiseFilterMode { get => noiseFilterMode; set { if (value is "rnnoise" or "speech") Set(ref noiseFilterMode, value); } }
     private bool noiseSuppression;
     public bool NoiseSuppression { get => noiseSuppression; set => Set(ref noiseSuppression, value); }
     private double speechConfidence;
@@ -59,6 +62,7 @@ public sealed class SettingsViewModel : ObservableObject
         result.PushToTalkKey = PushToTalkKey;
         result.Language = UiText.Current.Language;
         result.DuckPercent = DuckPercent;
+        result.NoiseFilterMode = NoiseFilterMode;
         result.NoiseSuppression = NoiseSuppression; result.SpeechConfidence = SpeechConfidence;
         result.ClientName = ClientName.Trim(); result.PartnerIp = PartnerIp.Trim();
         result.AudioDeviceId = AudioDeviceId ?? "";

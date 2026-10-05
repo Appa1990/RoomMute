@@ -13,6 +13,7 @@ public sealed class AppConfig
     public int Port { get; set; } = 48731;
     public int Priority { get; set; } = 10;
     public string AudioDeviceId { get; set; } = "";
+    public string NoiseFilterMode { get; set; } = "speech";
     public bool NoiseSuppression { get; set; } = true;
     public double SpeechConfidence { get; set; } = 60;
     public double SpeakThreshold { get; set; } = -35;
@@ -30,6 +31,7 @@ public sealed class AppConfig
 
     public string? Validate(bool requirePartner = true)
     {
+        if (NoiseFilterMode is not ("rnnoise" or "speech")) return "Ungültiger Geräuschfilter-Modus.";
         if (!ShortcutGesture.TryParse(PushToTalkKey, out _)) return "Ungültiger Push-to-talk-Shortcut.";
         if (Language is not ("de" or "en")) return "Ungültige Sprache.";
         if (string.IsNullOrWhiteSpace(ClientName) || ClientName.Length > 64) return "Der PC-Name muss 1–64 Zeichen enthalten.";
